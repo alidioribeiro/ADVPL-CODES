@@ -1,0 +1,386 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 08/03/02
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+User Function XSalfam()        // incluido pelo assistente de conversao do AP5 IDE em 08/03/02
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Declaracao de variaveis utilizadas no programa atraves da funcao    Ё
+//Ё SetPrvt, que criara somente as variaveis definidas pelo usuario,    Ё
+//Ё identificando as variaveis publicas do sistema utilizadas no codigo Ё
+//Ё Incluido pelo assistente de conversao do AP5 IDE                    Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+
+SetPrvt("CDESC1,CDESC2,CDESC3,CSTRING,AORD,ARETURN")
+SetPrvt("NOMEPROG,ALINHA,NLASTKEY,CPERG,NTAMANHO,LI")
+SetPrvt("NVEZES,AINFO,ADEPEND,LEND,CFILANTE,CTIT")
+SetPrvt("WNREL,NORDEM,CFILDE,CFILATE,CMATDE,CMATATE")
+SetPrvt("CCCDE,CCCATE,NVIAS,TITULO,ADRIVER,CHAVE")
+SetPrvt("CLCNASC,CCARTO,CNREGCAR,CNUMLIV,CNUMFOL,CDTENT")
+SetPrvt("CDTBAIXA,CLNOME,DNASC,NX,CE_EMPRESA,CE_ENDERECO")
+SetPrvt("CE_CIDADE,CE_UF,CE_CEP,CE_CGC,CE_IE,CE_BAIRRO")
+SetPrvt("CF_NOME,CF_ENDERECO,CF_BAIRRO,CF_CIDADE,CF_UF,CF_CEP")
+SetPrvt("CF_CTPS,CF_UFCTPS,CF_SERIE,CF_CIC,CF_RG,CF_MAT")
+SetPrvt("CF_FIL,CF_CC,CF_ADMISSA,CF_DEMISSA,NY,NZ")
+
+#IFNDEF WINDOWS
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 08/03/02 ==> 	#DEFINE PSAY SAY
+#ENDIF
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 08/03/02 ==> #INCLUDE "SALFAM.CH"
+/*
+эээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээ
+╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠
+╠╠зддддддддддбддддддддддбдддддддбдддддддддддддддддддддддбддддддбдддддддддд©╠╠
+╠╠ЁPrograma  Ё SALFAM   Ё Autor Ё R.H. - Aldo Marini    Ё Data Ё 07.02.97 Ё╠╠
+╠╠цддддддддддеддддддддддадддддддадддддддддддддддддддддддаддддддадддддддддд╢╠╠
+╠╠ЁDescri┤┘o Ё Ficha de Salario-Familia                                   Ё╠╠
+╠╠цддддддддддедддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд╢╠╠
+╠╠ЁSintaxe   Ё SALFAM                                                     Ё╠╠
+╠╠цддддддддддедддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд╢╠╠
+╠╠Ё Uso      Ё RdMake                                                     Ё╠╠
+╠╠цддддддддддадддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд╢╠╠
+╠╠Ё         ATUALIZACOES SOFRIDAS DESDE A CONSTRU─AO INICIAL.             Ё╠╠
+╠╠цддддддддддддбддддддддбддддддбдддддддддддддддддддддддддддддддддддддддддд╢╠╠
+╠╠ЁProgramador Ё Data   Ё BOPS Ё  Motivo da Alteracao                     Ё╠╠
+╠╠цддддддддддддеддддддддеддддддедддддддддддддддддддддддддддддддддддддддддд╢╠╠
+╠╠ЁCristina    Ё02/06/98ЁXXXXXXЁ Conversao para outros idiomas            Ё╠╠
+╠╠ЁKleber      Ё03/02/99ЁXXXXXXЁ Acerto Bug do Mil┬nio.                   Ё╠╠
+╠╠юддддддддддддаддддддддаддддддадддддддддддддддддддддддддддддддддддддддддды╠╠
+╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠
+ъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъ*/
+
+cDesc1  := 'Ficha de Salario-Famila.'
+cDesc2  := 'Ser═ impresso de acordo com os parametros solicitados pelo'
+cDesc3  := 'usuario.'
+cString := 'SX3' 					//-- alias do arquivo principal (Base)
+aOrd    := {'Matricula','Centro de Custo'} 	
+   
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Define Variaveis Private(Basicas)                            Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+aReturn  := { 'Zebrado','Administra┤└o',2,2,1,'',1 }	
+NomeProg := 'GPER440'
+aLinha   := {}
+nLastKey := 0
+cPerg    := 'GPR440'
+nTamanho := "M"
+   
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Variaveis Utilizadas na funcao Principal do Programa         Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+Li       := 0
+nVezes   := 0   
+aInfo    := {}
+aDepend  := {}
+lEnd     := .F.
+cFilAnte := 'ЗЗ'
+
+
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Verifica as perguntas selecionadas                           Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+pergunte('GPR440',.F.)
+   
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Variaveis utinLizadas para parametros                        Ё
+//Ё mv_par01        //  FiLial De                                Ё
+//Ё mv_par02        //  FiLial Ate                               Ё
+//Ё mv_par03        //  Matricula De                             Ё
+//Ё mv_par04        //  Matricula Ate                            Ё
+//Ё mv_par05        //  Centro De Custo De                       Ё
+//Ё mv_par06        //  Centro De Custo Ate                      Ё
+//Ё mv_par07        //  N╖ de Vias                               Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+
+cTit := ' FICHA DE SALARIO-FAMILIA '
+   
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Envia controle para a funcao SETPRINT                        Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+WnRel :='GPER440' 	//-- Nome Default do relatorio em Disco.
+WnRel :=SetPrint(cString,WnRel,cPerg,cTit,cDesc1,cDesc2,cDesc3,.F.,aOrd,,nTamanho)
+
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Carregando variaveis mv_par?? para Variaveis do Sistema.     Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+nOrdem  := aReturn[8]
+
+If(!Empty(mv_par01),cFilDe :=mv_par01,cFilDe :='00')
+If(!Empty(mv_par02),cFilAte:=mv_par02,cFilAte:='99')
+If(!Empty(mv_par03),cMatDe := mv_par03,cMatDe :='00000')
+If(!Empty(mv_par04),cMatAte:= mv_par04,cMatAte:='99999')
+If(!Empty(mv_par05),cCCDe := mv_par05,cCCDe :='0        ')
+If(!Empty(mv_par06),cCCAte:= mv_par06,cCCAte:='999999999')
+If(!Empty(mv_par07),nVias:= If(mv_par07<=0,1,mv_par07),nVias:= 1)
+
+Titulo  := 'FICHA DE SALARIO - FAMILIA'
+   
+If nLastKey == 27
+	Return Nil
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return Nil
+Endif
+
+lEND := .F.
+WnRel := "GPER440"
+cSTRING := "SX3"
+
+#IFDEF WINDOWS
+	RptStatus({|| fSalFam()})// Substituido pelo assistente de conversao do AP5 IDE em 08/03/02 ==> 	RptStatus({|| Execute(fSalFam)})
+	Return
+    Static Function fSalFam()
+#ENDIF
+
+dbSelectArea('SRA')
+dbSetOrder(nOrdem)
+SetRegua(RecCount())
+
+aDriver	:=	ReadDRIVER()
+
+//--Setar impressora
+If aReturn[4] == 1  // Comprimido
+    @ 0,0 PSAY &(aDriver[3])
+Else                // Normal
+    @ 0,0 PSAY &(aDriver[4])
+Endif
+
+While !Eof()
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Incrementa Regua de Processamento.                           Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	IncRegua()
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Cancela Impresфo ao se pressionar <ALT> + <A>.               Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	#IFNDEF WINDOWS
+		Inkey()
+		If Lastkey() == 286
+			lEnd := .T.
+		EndIf	
+	#ENDIF        
+	
+	If lEnd
+		@ Prow()+1, 0 PSAY "Cancelado pelo Operador"
+		Chave := 1
+		Exit
+	EndIF
+	
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Processa Quebra de Filial.                                   Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If SRA->RA_FILIAL #cFilAnte
+		If	!fInfo(@aInfo,SRA->RA_FILIAL)
+			dbSelectArea('SRA')
+			dbSkip()
+			Loop
+		Endif		
+		cFilAnte := SRA->RA_FILIAL		
+	Endif	
+
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Consiste Parametriza┤фo do Intervalo de Impressфo.           Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If (SRA->RA_Filial < cFilDe) .Or. (SRA->RA_FILIAL > cFilAte) .Or. ;
+		(SRA->RA_MAT < cMatDe)    .Or. (SRA->RA_MAT > cMatAte) .Or. ;
+		(SRA->RA_CC < cCcDe)      .Or. (SRA->RA_CC > cCCAte)
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+	EndIf
+		
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Pesquisa no arquivo de Dependentes.                          Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+    cLcnasc	:= space(12)
+	cCarto	:= space(12)
+	cNregcar:= space(8)
+	cNumliv	:= space(7)
+	cNumfol	:= space(7)
+	cDtent	:= ctod("  /  /    ")
+	cDtbaixa:= ctod("  /  /    ")
+
+	dbSelectArea('SRB')
+	If dbSeek(SRA->RA_Filial+SRA->RA_Mat,.F.)		
+		While SRB->RB_FILIAL+SRB->RB_MAT == SRA->RA_FILIAL+SRA->RA_MAT
+         If (SRB->RB_TipSf == '2') .And. (SRB->RB_GrauPar=='F')
+				cLnome	:= subs(srb->rb_nome,1,30)
+				dNasc		:= srb->rb_dtnasc
+				cLcnasc 	:= srb->rb_locnasc
+				cCarto	:= srb->rb_cartori
+				cNregcar	:= srb->rb_nregcar
+				cNumliv	:= srb->rb_numlivr
+				cNumfol	:= srb->rb_numfolh
+				cDtent	:= srb->rb_dtentra
+				cDtbaixa	:= srb->rb_dtbaixa
+				aAdd(aDepend,{Left(SRB->RB_Nome,30),SRB->RB_DtNasc,clcnasc,ccarto,cnregcar,cnumliv,cnumfol,cdtent,cdtbaixa})
+			EndIf
+			dbSkip()
+		EndDo
+	Else
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+	Endif	
+   aSort(aDepend,,, {|X,Y| DtoS(X[2]) < DtoS(Y[2]) })
+	If Len(aDepend) <= 0
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+   ElseIf Len(aDepend) < 13
+      nVezes := (13 - Len(aDepend))
+		For Nx := 1 to nVezes
+			 aAdd(aDepend,{Space(30),CtoD("  /  /    "),SPACE(12),SPACE(12),SPACE(8),SPACE(7),SPACE(7),CTOD("  /  /    "),CTOD("  /  /    ")})
+		Next Nx
+	EndIf
+	
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Variaveis utilizadas na impressao.                           Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	cE_Empresa  := Left(aInfo[3],40)
+   cE_Endereco := Left(aInfo[4],30)
+   cE_Cidade   := Left(aInfo[5],20)
+	cE_Uf       := Left(aInfo[6],2)
+	cE_Cep      := Transform(Left(aInfo[7],8),'@R #####-###')
+   cE_Cgc      := Transform(Left(aInfo[8],14),'@R ##.###.###/####-##')
+	cE_IE       := Left(Transform(Val(aInfo[9]),'@E 99,999,999,999,999'),14)
+   cE_Bairro   := Left(aInfo[13],20)
+
+   cF_Nome     := Left(SRA->RA_Nome,30)
+	cF_Endereco := Left(SRA->RA_Endereco,30) + ' ' + Left(SRA->RA_Complem,3)
+   cF_Bairro   := Left(SRA->RA_Bairro,15)
+   cF_Cidade   := Left(SRA->RA_Municipio,16)
+	cF_Uf       := Left(SRA->RA_Estado,2)
+	cF_Cep      := Transform(Left(SRA->RA_Cep,8),'@R #####-###')
+
+   cF_CTPS     := Left(SRA->RA_NumCp,7)
+	cF_UFCTPS   := Left(SRA->RA_UFCP,2)
+	cF_Serie    := Left(SRA->RA_SerCp,5)		
+	cF_CIC      := Left(SRA->RA_CIC,11)
+	cF_RG       := Left(SRA->RA_RG,15)
+	cF_Mat      := Left(SRA->RA_Mat,6)
+	cF_Fil      := Left(SRA->RA_Filial,2)
+   cF_CC       := Left(SRA->RA_CC,9)
+   cF_admissa  := DtoC(SRA->RA_Admissa)
+   cF_demissa  := DtoC(SRA->RA_Demissa)
+
+   //здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+   //Ё Posicionamento das colunas da Ficha de Salario-Famila        Ё
+   //юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+   //           1         2         3         4         5         6         7         8         9         0         1         2         3
+   // 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901
+   //   Empresa: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                        CGC/Matricula No INPS: 99.999.999/9999-99
+   //   Endereco: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      Bairro: xxxxxxxxxxxxxxxxxxxx    CEP: 99999-999  Cidade: xxxxxxxxxxxxxxxxxxxx  UF: xx
+   //   Empregado: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     CTPS: xxxxxxx Serie: xxxxx      Dt.Admissao: 99/99/99          Dt.Demissao: 99/99/99
+   //   Endereco: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxx  Bairro: xxxxxxxxxxxxxxx         CEP: 99999-999  Cidade: xxxxxxxxxxxxxxxx      UF: xx
+	//	+------------------------------------------------------------------------------------------------------------------------------------+
+   // |No. |         NOME DO FILHO        | DT.NASC. |  LOCAL DO  |  CARTORIO  | N.REG. |  No.  |   No. | DATA     | DATA DA  |   VISTO    |
+   // |Ord.|                              |          | NASCIMENTO |            |        | LIVRO | FOLHA | ENTRADA  | BAIXA    |FISCAL IAPAS|
+   // |----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|------------|
+   // | 99 |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|99/99/9999|            |            |        |       |       |99/99/9999|99/99/9999|            |
+   // |----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|------------|
+   //                                                                                        ______________________________________________
+   //                                                                                                            ASSINATURA
+
+   //здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+   //Ё Impressao da Ficha de Salario-Famila                         Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	For Nx := 1 to nVias
+       @ Li, 54 PSAY'FICHA DE SALARIO - FAMILIA'
+       Li := Li+3
+       @ Li, 02 PSAY 'Empresa: ' + cE_Empresa + Space(38) + 'CGC/Matricula No INPS: ' + cE_Cgc
+       Li := Li+2
+       @ Li, 02 PSAY 'Endereco: ' + cE_Endereco + Space(6)+ 'Bairro: '+cE_Bairro + '  CEP: ' + cE_Cep + '  Cidade: ' + cE_Cidade + '  UF: ' + cE_UF
+       Li := Li+2
+       @ Li, 02 PSAY 'Empregado: ' + cF_Nome + Space(5)+ 'CTPS: '+ cF_Ctps + ' Serie: ' + cF_Serie + '    Dt.Admissao: '+ cF_Admissa +Space(6)+ 'Dt.Demissao: ' +cF_demissa	
+       Li := Li+2
+       @ Li, 02 PSAY 'Endereco: ' + cF_Endereco+ '  Bairro: ' + cF_Bairro + Space(7) + 'CEP: ' + cF_Cep + '  Cidade: ' + cF_Cidade + Space(6) + 'UF: ' + cF_UF	
+       Li := Li+2
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+		 Li := Li+1
+       @ Li, 00 PSAY '|'
+       @ Li, 38 PSAY 'FILHOS MENORES DE 14 ANOS - (Dados extraidos das certidoes)'
+       @ Li,131 PSAY '|'
+       Li := Li+1
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY '|No. |          NOME DO FILHO         | DT.NASC. |  LOCAL DO  |  CARTORIO  | N.REG. |  No.  |   No. | DT.      | DT.DA    |  VISTO   |'
+       Li := Li+1
+       @ Li, 00 PSAY '|Ord.|                                |          | NASCIMENTO |            |        | LIVRO | FOLHA | ENTR.    | BAIXA    |FISC.IAPAS|'
+       Li := Li+1
+       @ Li, 00 PSAY '|----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|----------|'
+       Li := Li+1
+
+		 //здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+       //Ё Impressao da Ficha Salario-Familia (Detalhe).                Ё
+		 //юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+		 For Ny := 1 to Len(aDepend) 			
+           If Ny #1
+			     @ Li, 00 PSAY '|----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|----------|'
+				  Li := Li+1
+           Endif
+		     @ Li, 00 PSAY '| ' + If(!Empty(aDepend[Ny,1]),StrZero(Ny,2),space(2)) + ' |' + aDepend[Ny,1] + '|' + PadR(DtoC(aDepend[Ny,2]),10)+ '|'+ aDepend[Ny,3] +'|'+aDepend[Ny,4]+'|'+ aDepend[Ny,5]+'|'+ aDepend[Ny,6]+'|'+ aDepend[Ny,7]+'|'+PadR(Dtoc(aDepend[Ny,8]),10)+'|'+PadR(DtoC(aDepend[Ny,9]),10)+'|'+'          |' 
+			  Li := Li+1
+   	 Next Ny
+
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY '| VALOR DE UM SALARIO-FAMILIA                                     | VALOR TOTAL DOS SALARIOS-FAMILIA A PAGAR                       |'
+       Li := Li+1
+       @ Li, 00 PSAY '|'
+       @ Li, 66 PSAY '|'
+       @ Li,131 PSAY '|'
+       Li := Li+1
+       @ Li, 00 PSAY '| Em          ___ de __________________ de _____  R$ ____________ | A partir de ___ de _________________ de _____  R$ ____________ |'
+       Li := Li+1
+
+       For Nz:=1 to 5
+           @ Li, 00 PSAY '| Alterado em ___ de __________________ de _____  R$ ____________ | A partir de ___ de _________________ de _____  R$ ____________ |'
+	        li := li+1
+       Next
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY 'RECEBI OS DOCUMENTOS ACIMA'
+       Li := Li+3
+       @ Li, 87 PSAY '___________________________________________'
+       Li := Li+1
+       @ Li,103 PSAY 'ASSINATURA'
+		 Li := 0		
+
+	Next Nx   
+	
+	//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Reinicializa Variaveis.                                      Ё
+	//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	Li      := 0
+	aDepend := {}	
+	dbSelectArea( 'SRA' )
+	dbSkip()	
+	
+EndDo	
+
+Eject //-- Ejeta a ultima folha.
+
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Termino do Relatorio.                                        Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+dbSelectArea( 'SRA' )
+RetIndex('SRA')
+dbSetOrder(1)
+   
+Set Device To Screen
+If aReturn[5] == 1
+	Set Printer To
+	dbCommit()
+	OurSpool(WnRel)
+Endif
+MS_Flush()
+
+Return Nil
