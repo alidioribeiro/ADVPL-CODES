@@ -1,0 +1,307 @@
+
+#include "Protheus.ch"
+#include "Totvs.ch"
+
+User Function NSPCPR01()
+     
+Local cDesc1        := "Este programa tem como objetivo imprimir relatorio "
+Local cDesc2        := "de acordo com os parametros informados pelo usuario."
+Local cDesc3        := ""
+Local cPict         := ""
+Local titulo        := "Estrutura x Empenho x Consumo"
+Local nLin          := 80
+Local Cabec1        := ""
+Local Cabec2        := ""
+Local imprime       := .T.
+Local aOrd          := {}
+Private lEnd        := .F.
+Private lAbortPrint := .F.
+Private CbTxt       := ""
+Private limite      := 136
+Private tamanho     := "G"
+Private nomeprog    := "NSPCPR01" // Coloque aqui o nome do programa para impressao no cabecalho
+Private nTipo       := 18
+Private aReturn     := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey    := 0
+Private cbtxt       := Space(10)
+Private cbcont      := 00
+Private CONTFL      := 01
+Private m_pag       := 01
+Private wnrel       := "NSPCPR01"
+Private cString     := " "
+Private cPErg       := PADR("NSPCPR01",Len(SX1->X1_GRUPO))
+
+_setPergunte(cPerg)
+wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.T.,aOrd,.T.,Tamanho,,.T.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+Pergunte(cPerg,.F.)
+
+_cdFile := AllTrim(GetTempPath())
+_cdFile += If( Right(_cdFile,1) $ "\/" ,"","\") + Alltrim(mv_par05)
+   
+_cdTbl := _getTable()
+//If mv_par06 == 01 .OR. mv_par06 == 03      
+Processa( {|| _Excel( _cdTbl , _cdFile , {} ) } ," Gerando Dados no Excel, Aguarde...")
+//EndIf
+
+Return Nil
+
+Static Function RunReport(Cabcec1,Cabec2,Titulo,nLin)
+   
+   
+   
+   _cdTbl := _getTable()
+   
+   Cabec1 := " Codigo     Descricao                                 Quantidade      "
+   Cabec2 := "                                                         Inicial      " 
+   
+   If Li > 55 // Salto de Página. Neste caso o formulario tem 55 linhas...
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+		Li := 8
+   Endif
+   
+   SetRegua(nCont)
+   
+   While !(_cdTbl)->(EOf())
+       
+       
+       
+       (_cdTbl)->(dbSkip())
+   EndDo
+   
+   SET DEVICE TO SCREEN
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se impressao em disco, chama o gerenciador de impressao...          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+	If aReturn[5]==1
+		dbCommitAll()
+		SET PRINTER TO
+		OurSpool(wnrel)
+	Endif
+	
+	MS_FLUSH()
+	
+Return
+
+
+Static Function _setPergunte(cPerg)                   
+ Local _sAlias := Alias()
+ Local aRegs := {}
+ Local i,j
+
+ dbSelectArea("SX1")
+ dbSetOrder(1)
+
+	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05
+	aAdd(aRegs,{cPerg,"01","Data de  ? " ,"" ,"","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","" })
+	aAdd(aRegs,{cPerg,"02","Data Ate ? " ,"" ,"","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","" })
+	aAdd(aRegs,{cPerg,"03","OP de    ? " ,"" ,"","mv_ch3","C",13,0,0,"G","","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","SC2" })
+	aAdd(aRegs,{cPerg,"04","OP Ate   ? " ,"" ,"","mv_ch4","C",13,0,0,"G","","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","SC2" })
+	aAdd(aRegs,{cPerg,"05","Arquivo  ? " ,"" ,"","mv_ch5","C",15,0,0,"G","","mv_par05","","","","","","","","","","","","","","","","","","","","","","","","","" })
+	
+	For i:=1 to Len(aRegs)
+		If !dbSeek(PadR(cPerg,10)+aRegs[i,2])
+			RecLock("SX1",.T.)
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next j 
+			MsUnlock()
+		Endif
+	Next i
+	
+	dbSelectArea(_sAlias)
+
+Return Nil
+
+Static Function _Excel(_cTbl,_cFile,_aCab)
+
+	Local _aStru  :=  (_cTbl)->(dbStruct())
+	Local oExcel  := FWMSEXCEL():New()
+	Local _cWork  := "Estrutura x Empenho x Consumo"
+	Local _aCol   := {}
+	Local _cdTbl  := _cWork  + ':' + DTOC(MV_PAR01) + '-' +  DTOC(MV_PAR02)
+
+	Default _aCab := {{"",""}}
+
+	oExcel:AddworkSheet( _cWork )
+	oExcel:AddTable( _cWork, _cdTbl)
+
+	For _ndI := 1 To Len(_aStru)
+	
+		_cdCp := _aStru[_ndI][01]
+		_nPos := aScan(_aCab,{|y| y[01] == _cdCp })
+	
+		If _nPos > 0
+			_cAdd :=  _aCab[_nPos,02]
+		Elseif _ChkCpo(_aStru[_ndI][01])
+			_cAdd := SX3->X3_TITULO
+		Else
+			_cAdd := StrTran(_aStru[_ndI][01],"_"," ")
+		EndIf
+	
+		_ndAlign  := iIf(_aStru[_ndI][02] $ 'N',3, iIf(_aStru[_ndI][02] $ 'D' ,2, 1) )
+		_ndFormat := iIf(_aStru[_ndI][02] $ 'N',2, iIf(_aStru[_ndI][02] $ 'D' ,4, 1) )
+		_ldTotal  := iIf(_aStru[_ndI][02] $ 'N',.T.,.F. )
+		oExcel:AddColumn(_cWork, _cdTbl, _cAdd , _ndAlign, _ndFormat, _ldTotal )
+		aAdd(_aCol,_cAdd)
+	Next
+
+	ProcRegua(0)
+
+	While !(_cTbl)->(Eof())
+
+		IncProc()
+		_adLinha := {}
+		For _ndI := 1 To Len(_aStru)
+			If _aStru[_ndI][02] == "D"
+				aAdd(_adLinha, DTOC( (_cTbl)->&(_aStru[_ndI][01]) ) )
+			Else
+				aAdd(_adLinha, (_cTbl)->&(_aStru[_ndI][01])  )
+			EndIf
+		Next
+		
+		oExcel:AddRow(_cWork, _cdTbl, _adLinha )
+		
+		(_cTbl)->(dbSkip())
+	EndDo
+
+	oExcel:Activate()
+	oExcel:GetXmlFile(_cFile)
+	oExcel:DeActivate()
+    RunExcel(_cFile)
+Return Nil
+
+Static Function _ChkCpo(_cCpo)
+	Local _lRet := .F.
+   
+	SX3->(dbgoTop())
+	SX3->(dbSetOrder(2))
+	_lRet := SX3->(dbSeek(Alltrim(_cCpo)))
+   
+Return _lRet
+
+
+Static Function _getTable()
+    
+    Local cQry    := ""
+    Local _cTab   := getNextAlias()          
+    Local cwEnter := CHR(13)
+    
+	cQry += cwEnter + " SELECT ISNULL(PAI , EMP_PAI ) AS PAI, 
+	cQry += cwEnter +        " ISNULL(OP , EMP_OP ) AS OP, 
+	cQry += cwEnter +        " SC2.C2_QUANT AS QTD_OP, 
+	cQry += cwEnter +        " CONVERT( VARCHAR , CONVERT( DATE, SC2.C2_DATRF) ,103) AS DT_ENCERRAMENTO, 
+	cQry += cwEnter +        " SC2.C2_CC AS CC, 
+	cQry += cwEnter +        " ISNULL(PRODUCAO , EMP_PROD ) AS PRODUCAO, 
+	cQry += cwEnter +        " ISNULL(FILHO , D4_COD ) AS FILHO, 
+	cQry += cwEnter +        " ISNULL(QUANT_BOM, 0 ) / ISNULL(PRODUCAO , EMP_PROD ) AS BOM, 
+	cQry += cwEnter +        " ISNULL(QUANT_BOM, 0 ) AS QUANT_BOM, 
+	cQry += cwEnter +        " ISNULL(CONSUMO , 0 ) AS CONSUMO,
+	cQry += cwEnter +        " ISNULL(QUANT_BOM, 0 ) - ISNULL(CONSUMO , 0 ) AS DIFERENCA,
+	cQry += cwEnter +        " ISNULL(EMP_PREV , 0 ) AS EMP_PREV,
+	cQry += cwEnter +        " ISNULL(EMP_ORI , 0 ) AS EMP_ORI, 
+	cQry += cwEnter +        " G1_OPC, G1_GROPC  
+	
+	cQry += cwEnter +   " FROM (SELECT ISNULL(PAI      , FILHO_PAI  ) AS PAI, 
+	cQry += cwEnter +                " ISNULL(OP       , FILHO_OP   ) AS OP, 
+	cQry += cwEnter +                " ISNULL(PRODUCAO , FILHO_QPROD) AS PRODUCAO, 
+	cQry += cwEnter +                " ISNULL(G1_COMP  , FILHO      ) AS FILHO, 
+	cQry += cwEnter +                " ISNULL(QUANT_BOM, 0          ) AS QUANT_BOM, 
+	cQry += cwEnter +                " ISNULL(CONSUMO  , 0          ) AS CONSUMO,
+	cQry += cwEnter +                " G1_OPC          , G1_GROPC
+	
+	cQry += cwEnter +           " FROM ( SELECT PAI, OP, PRODUCAO, G1_COMP, G1_OPC, G1_GROPC, SUM(QUANT_BOM) AS QUANT_BOM
+	cQry += cwEnter +                    " FROM ( SELECT PAI, OP, PRODUCAO, ISNULL(G1_COMP, '') AS G1_COMP, G1_OPC, G1_GROPC, 
+	cQry += cwEnter +                                  " CASE WHEN ISNULL(G1_FIXVAR, 'F') = 'V' THEN G1_QUANT * PRODUCAO ELSE ISNULL(G1_QUANT, 0) END AS QUANT_BOM
+	cQry += cwEnter +                             " FROM ( SELECT D3_COD AS PAI, D3_OP AS OP, SUM(D3_QUANT) AS PRODUCAO
+	cQry += cwEnter +                                      " from SD3010 AS SD3 (NOLOCK)
+	cQry += cwEnter +                                     " WHERE D_E_L_E_T_ = '' 
+	cQry += cwEnter +                                       " AND D3_ESTORNO = ''
+	cQry += cwEnter +                                       " AND D3_EMISSAO BETWEEN '" + DTOS(MV_PAR01) + "' AND '" + DTOS(MV_PAR02) + "' " 
+	cQry += cwEnter +                                       " AND D3_CF = 'PR0'
+	cQry += cwEnter +                                       " AND D3_ESTORNO = ''
+	cQry += cwEnter +                                       " AND D3_OP <> ''
+	cQry += cwEnter +                                       " GROUP BY D3_COD, D3_OP
+	cQry += cwEnter +                                   " ) AS PR0
+	cQry += cwEnter +                              " LEFT JOIN ( SELECT G1_COD, G1_COMP, G1_QUANT, G1_FIXVAR, G1_OPC, G1_GROPC
+	cQry += cwEnter +                                            " FROM SG1010 AS SG1 
+	cQry += cwEnter +                                           " WHERE SG1.D_E_L_E_T_ = '' 
+	cQry += cwEnter +           								  " AND '" + DTOS(MV_PAR01) + "' BETWEEN G1_INI AND G1_FIM
+	cQry += cwEnter +           								  " AND '" + DTOS(MV_PAR02) + "' BETWEEN G1_INI AND G1_FIM
+	cQry += cwEnter +           							 " ) AS SG1 ON PAI = G1_COD
+	cQry += cwEnter +                          " ) AS PR1
+	cQry += cwEnter +                    " GROUP BY PAI, OP, PRODUCAO, G1_COMP, G1_OPC, G1_GROPC
+	cQry += cwEnter +                 " ) AS PR0 
+	
+	cQry += cwEnter +            " FULL JOIN ( SELECT FILHO, FILHO_OP,PRODUCAO AS FILHO_QPROD, PAI AS FILHO_PAI, SUM(CONSUMO) AS CONSUMO 
+	cQry += cwEnter +                          " FROM ( SELECT D3_COD AS FILHO, D3_OP AS FILHO_OP, CASE WHEN LEFT(D3_CF, 1) = 'R' THEN D3_QUANT ELSE (D3_QUANT * (-1)) END AS CONSUMO
+	cQry += cwEnter +                                   " from SD3010 AS SD3 (NOLOCK)
+	cQry += cwEnter +  								   " WHERE D_E_L_E_T_ = '' 
+	cQry += cwEnter +  								   " AND D3_ESTORNO = ''
+	cQry += cwEnter +  								   " AND D3_EMISSAO BETWEEN '" + DTOS(MV_PAR01) + "' AND '" + DTOS(MV_PAR02) + "' " 
+	cQry += cwEnter +  								   " AND D3_CF <> 'PR0'
+	cQry += cwEnter +  								   " AND D3_ESTORNO = ''
+	cQry += cwEnter + 								   " AND D3_OP <> '' AND D3_CF <> 'RE5'
+	cQry += cwEnter +                      " ) AS AUX1
+	cQry += cwEnter +           " INNER JOIN ( SELECT D3_COD AS PAI, D3_OP AS OP, SUM(D3_QUANT) AS PRODUCAO
+	cQry += cwEnter +                          " from SD3010 AS SD3 (NOLOCK)
+	cQry += cwEnter +                         " WHERE D_E_L_E_T_ = '' AND D3_ESTORNO = ''
+	cQry += cwEnter +                           " AND D3_EMISSAO BETWEEN '" + DTOS(MV_PAR01) + "' AND '" + DTOS(MV_PAR02) + "' " 
+	cQry += cwEnter +                           " AND D3_CF = 'PR0' AND D3_ESTORNO = '' AND D3_OP <> ''
+	cQry += cwEnter +                         " GROUP BY D3_COD, D3_OP
+	cQry += cwEnter +                      " ) AUXPAI ON OP = FILHO_OP
+	cQry += cwEnter +            " GROUP BY FILHO, FILHO_OP, PRODUCAO, PAI
+	cQry += cwEnter +          " ) AS RE0 ON FILHO_OP = PR0.OP AND RE0.FILHO = PR0.G1_COMP 
+	cQry += cwEnter +       " ) AS TAB
+	cQry += cwEnter +  " FULL JOIN ( SELECT EMP_PAI, EMP_OP, EMP_PROD, D4_COD, SUM(D4_QTDEORI) AS EMP_ORI, SUM(EMP_PROD* (D4_QTDEORI / C2_QUANT)) EMP_PREV, C2_QUANT
+	cQry += cwEnter +                " FROM ( SELECT D3_COD AS EMP_PAI, D3_OP AS EMP_OP, SUM(D3_QUANT) AS EMP_PROD
+	cQry += cwEnter +                         " from SD3010 AS SD3 (NOLOCK)
+	cQry += cwEnter +                        " WHERE D_E_L_E_T_ = '' AND D3_ESTORNO = ''
+	cQry += cwEnter +                          " AND D3_EMISSAO BETWEEN '" + DTOS(MV_PAR01) + "' AND '" + DTOS(MV_PAR02) + "' " 
+	cQry += cwEnter +                          " AND D3_CF = 'PR0' AND D3_ESTORNO = '' AND D3_OP <> ''
+	cQry += cwEnter +                        " GROUP BY D3_COD, D3_OP
+	cQry += cwEnter +                     " ) AUXPAI 
+	cQry += cwEnter + " INNER JOIN SD4010 AS SD4 (NOLOCK) ON SD4.D_E_L_E_T_ = '' AND D4_OP = AUXPAI.EMP_OP
+	cQry += cwEnter + " INNER JOIN SC2010 AS SC2 (NOLOCK) ON SC2.D_E_L_E_T_ = '' AND C2_NUM + C2_ITEM + C2_SEQUEN = AUXPAI.EMP_OP 
+	cQry += cwEnter + " GROUP BY EMP_PAI, EMP_OP, EMP_PROD, D4_COD, C2_QUANT 
+	cQry += cwEnter + ") AS EMP ON EMP_OP = TAB.OP AND EMP.D4_COD = TAB.FILHO
+	cQry += cwEnter + " INNER JOIN SC2010 AS SC2 (NOLOCK) ON SC2.D_E_L_E_T_ = '' AND C2_NUM + C2_ITEM + C2_SEQUEN = ISNULL(OP , EMP_OP )
+	cQry += cwEnter + " WHERE ISNULL(OP , EMP_OP ) BETWEEN '" + MV_PAR03 + "' AND '" + MV_PAR04 + "' " 
+                                                     
+	MemoWrit("NSPCPR01.sql",cQry)
+ 
+ //	cQry += cwEnter + " order by SERIE, DOCUMENTO "
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,, cQry ),_cTab,.F.,.F.)
+  
+    
+Return _cTab
+
+                                                            
+ 
+ **********************************************************************************************************************************
+
+Static Function RunExcel(cwArq)
+	Local oExcelApp
+	Local aNome := {}
+ 
+	oExcelApp := MsExcel():New()                    	  // Cria um objeto para o uso do Excel
+	oExcelApp:WorkBooks:Open(cwArq)
+	oExcelApp:SetVisible(.T.)   // Abre o Excel com o arquivo criado exibido na Primeira planilha.
+
+Return

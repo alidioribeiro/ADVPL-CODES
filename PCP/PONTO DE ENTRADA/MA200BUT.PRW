@@ -1,0 +1,156 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 08/03/02
+#include "topconn.ch"
+#INCLUDE 'PROTHEUS.CH'
+#INCLUDE 'FONT.CH'
+#INCLUDE 'COLORS.CH'
+//--MA410MNU
+User Function MTA200MNU
+Local aBotao:={}
+
+Pos:=len(ARotina)
+
+AAdd( aRotina,{"Envia p/ Pré-Est.","U_TransfPre()",0, Pos,0,nil})
+
+Return
+//****************************************************************************************************/
+// Rotina Principal de Cópia de Prés-Estrutura   *****************************************************/
+// Desenvolvedor: Aglair Brito Ishii    **************************************************************/
+// Alteração: Wagner da Gama Corrêa (17/11/2017) *****************************************************/
+//****************************************************************************************************/
+
+User Function TransfPre ()
+Private cCodEst
+Private Estru:={}
+SetPrvt("oDlg1","oSay1","oGet1","oSBtn1")
+nEstru  := 0
+cCodEst:= SG1->G1_COD
+
+oDlg1  := MSDialog():New( 095,232,184,516,"Trans. Estrutura",,,.F.,,,,,,.T.,,,.T. )
+oSay1  := TSay():New( 012,004,{||"Estrutura de Origem:"},oDlg1,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,052,008)
+CodEst := TGet():New( 008,060,{|u| If(PCount()>0,cCodEst:=u,cCodEst)},oDlg1,060,008,'',{||ValidEst()},CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"SB1","CodEst",,)
+oSBtn1 := SButton():New( 024,093,1,{||ConfCop()},oDlg1,,, )
+oDlg1:Activate(,,,.T.)
+
+Return
+//
+//
+//   Rotina que verifica se existe
+//
+//
+Static Function ValidEst
+Local lRet:=.T.
+PosE:=Posicione("SG1",1,xFilial("SG1")+cCodEst,"G1_COD")
+PosPre:=Posicione("SGG",1,xFilial("SGG")+cCodEst,"GG_COD")
+If Len(Alltrim(PosE))=0
+	Alert("Esse produto não possui Estrutura")
+	lRet:=.F.
+End
+If Len(Alltrim(PosPre))>0
+	Alert("Já existe na Pré-Estrutura essa Estrutura")
+	lRet:=.F.
+EndIf
+Return lRet
+//
+/****************************************************************************/
+//
+Static Function ConfCop()
+Local AuxEst
+If ValidEst()
+	if Msgbox("Você confirma a Envio pra Pré-Estrutura ?","Copia Estrutura","YESNO" )
+		cNomeArq := Estrut2(cCodEst,1,,,.T.)
+		dbSelectArea('ESTRUT')
+		ESTRUT->(dbGotop())
+		While !ESTRUT->(Eof())
+			Aadd(Estru,{CODIGO,COMP,QUANT,TRT,GROPC,OPC})
+			DbSkip()
+		EndDo
+		FimEstrut2(Nil,cNomeArq)
+		GerSGG()
+	Endif
+Endif
+Return
+/****************************************************************************/
+/****************************************************************************/
+Static Function GerSGG()
+DbSelectArea("SGG")
+DbSetOrder(1)
+DbSelectArea("SG1")
+DbSetOrder(1)
+ProcRegua(len(Estru))
+For i:=1 to len(Estru)
+	IncProc()
+	DbSelectArea("SGG")
+	if !DbSeek(xFilial("SGG")+Estru[i][1]+Estru[i][2]+Estru[i][4])
+		
+		DbSelectArea("SG1")
+		if DbSeek(xFilial("SG1")+Estru[i][1]+Estru[i][2]+Estru[i][4])
+			RecLock("SGG",.T.)
+			SGG->GG_FILIAL	:= SG1->G1_FILIAL
+			SGG->GG_COD	    := SG1->G1_COD
+			SGG->GG_COMP	:= SG1->G1_COMP
+			SGG->GG_TRT	    := SG1->G1_TRT
+			SGG->GG_QUANT	:= SG1->G1_QUANT
+			SGG->GG_PERDA	:= SG1->G1_PERDA
+			SGG->GG_INI	    := SG1->G1_INI
+			SGG->GG_FIM	    := SG1->G1_FIM
+			SGG->GG_NIV	    := SG1->G1_NIV
+			SGG->GG_OBSERV	:= SG1->G1_OBSERV
+			SGG->GG_FIXVAR	:= SG1->G1_FIXVAR
+			SGG->GG_NIVINV	:= SG1->G1_NIVINV
+			SGG->GG_GROPC	:= SG1->G1_GROPC
+			SGG->GG_REVINI	:= SG1->G1_REVINI
+			SGG->GG_OPC	    := SG1->G1_OPC
+			SGG->GG_REVFIM  := SG1->G1_REVFIM
+			SGG->GG_POTENCI := SG1->G1_POTENCI
+			SGG->GG_OK      := SG1->G1_OK
+			SGG->GG_USUARIO := "COP. ESTR"
+			SGG->GG_STATUS  := "1"
+			MsUnlock()
+		EndIf
+	Endif
+Next
+Alert("Copia Concluida")
+oDlg1:End()
+Return
+/****************************************************************************/
+/****************************************************************************/
+Static Function GetBN(cProduto,nQuant,vBN,lSoBN)
+Local nPos, cTpo
+Local cFilSG1 := SG1->(XFILIAL("SG1"))
+Local cFilSB1 := SB1->(XFILIAL("SB1"))
+Local nReg    := SG1->(Recno())
+Local lRet    := .F.
+
+lSoBN := If( lSoBN == Nil , .F., lSoBN)
+
+If ValType(vBN) <> "A"
+	vBN := {}
+Endif
+
+SG1->(dbSetOrder(1))
+If lRet := SG1->(dbSeek(cFilSG1+cProduto,.T.))
+
+	While !SG1->(Eof()) .And. SG1->(G1_FILIAL+G1_COD) == cFilSG1+cProduto
+		
+		If dDataBase >= SG1->G1_INI .And. dDataBase <= SG1->G1_FIM
+			// Se for Material de Beneficiamento
+			cTpo := Posicione("SB1",1,cFilSB1+SG1->G1_COMP,"B1_TIPO")
+			If If( lSoBN , cTpo == "BN" , !(cTpo $ "PA,PI"))
+				nPos := AScan( vBN , {|x| x[1] == SG1->G1_COMP })
+				If nPos == 0
+					AAdd( vBN , { SG1->G1_COMP, "", 0})
+					nPos := Len(vBN)
+				Endif
+			   //	vBN[nPos,3] += (SG1->G1_QUANT  nQuant)  ((100 + SG1->G1_PERDA) /100)
+			Endif
+			
+			//GetBN(SG1->G1_COMP,(SG1->G1_QUANT  nQuant)  ((100 + SG1->G1_PERDA) /100), @vBN, lSoBN)
+		Endif
+		
+		SG1->(dbSkip())
+	Enddo
+Endif
+
+SG1->(dbGoTo(nReg))
+
+Return lRet

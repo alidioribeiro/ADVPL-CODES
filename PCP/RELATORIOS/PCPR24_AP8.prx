@@ -1,0 +1,1067 @@
+#INCLUDE "rwmake.ch"
+#include "ap5mail.ch"
+#Include "TOPCONN.CH"
+#Include "TBICONN.CH"
+
+USER FUNCTION PCPR24()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ DECLARACAO DE VARIAVEIS UTILIZADAS NO PROGRAMA ATRAVES DA FUNCAO    ³
+//³ SETPRVT, QUE CRIARA SOMENTE AS VARIAVEIS DEFINIDAS PELO USUARIO,    ³
+//³ IDENTIFICANDO AS VARIAVEIS PUBLICAS DO SISTEMA UTILIZADAS NO CODIGO ³
+//³ INCLUIDO PELO ASSISTENTE DE CONVERSAO DO AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SETPRVT("CBTXT,CBCONT,CABEC1,CABEC2,WNREL,TITULO")
+SETPRVT("CDESC1,CDESC2,CDESC3,TAMANHO,LIMITE,XSAIDA")
+SETPRVT("AORD,LCONTINUA,CUM,LEND,ARETURN,NOMEPROG")
+SETPRVT("NLASTKEY,CPERG,XCPI,GQUANT,GF_MPN,GF_MPI")
+SETPRVT("XCOMP,XDATA,XDATFCH,XMES,XCOMPRA,XDATFIN")
+SETPRVT("CDATINI,CDATFIN,XDATINI,XSALPED,CSTRING")
+SETPRVT("XMRP,XCOMPRA,APDTS,XGERMES,dValIni,dValFin,xEmpresa")
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ PCPR24   ³ Autor ³ Remerson Mogi         ³ Data ³ 26/09/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri…o  ³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ PCPR24(void)                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Rmogi       ³08/11/07³XXXXXX³Adptacao das querys para todas empresas   ³±±
+±±³Wcorrea     ³01/12/16³XXXXXX³Ajuste de Querys                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ DEFINE VARIAVEIS                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+*/
+
+titulo    := PadC("Produção, Perdas, indice de perda e devolução mes à mes          ", 30)
+cDesc1    := PadC("Este Programa tem como objetivo, emitir a relacao de produtos    ", 64)
+cDesc2    := PadC("produzidos, Mes a Mes. Conforme especificacoes em Parametros."    , 58)
+cDesc3    := ""
+TAMANHO   := "G"
+LIMITE    := 220
+CSTRING   := "SD3"
+AORD      := {} //-- ORDEM
+LCONTINUA := .T.
+CUM       := ""
+LEND      := .F.
+ARETURN   := { "ZEBRADO", 1,"ADMINISTRACAO", 2, 2, 1, "",1 }
+NOMEPROG  := "PCPR24"
+NLASTKEY  := 0
+CPERG     := "PCPR24"
+CMES      := {}
+
+AMSG      := {}
+vLista    := {}
+aCliente  := {}
+xEmpresa  := SM0->M0_CODIGO
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VERIFICA AS PERGUNTAS SELECIONADAS                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+PERGUNTE(CPERG,.F.)
+
+AADD(CMES,{"JAN","31","08"})
+
+If   U_Bissexto()
+	AADD(CMES,{"FEV","29","09"})
+Else
+	AADD(CMES,{"FEV","28","09"})
+EndIf
+
+AADD(CMES,{"MAR","31","10"})
+AADD(CMES,{"ABR","30","11"})
+AADD(CMES,{"MAI","31","12"})
+AADD(CMES,{"JUN","30","01"})
+AADD(CMES,{"JUL","31","02"})
+AADD(CMES,{"AGO","31","03"})
+AADD(CMES,{"SET","30","04"})
+AADD(CMES,{"OUT","31","05"})
+AADD(CMES,{"NOV","30","06"})
+AADD(CMES,{"DEZ","31","07"})
+
+AMSGPROD:= {"PLANO          ",;
+"PRODUÇÃO       ",;
+"QTD TRANSFERIDA",;
+"DEVOLUÇÂO      ",;
+"PERDA          ",;
+"RETRABALHO     ",;
+"% DEVOLUÇÃO    ",;
+"% PERDA        ",;
+"% RETRABALHO   "}
+
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Produto                          ³
+//³ mv_par04             // Ate o Produto                       ³
+//³ mv_par05             // Do Tipo                             ³
+//³ mv_par06             // Ate o Tipo                          ³
+//³ mv_par07             // Do Grupo                            ³
+//³ mv_par08             // Ate o Grupo                         ³
+//³ mv_par09             // Impr.Produto S/Mov. (Sim/Nao)       ³
+//³ mv_par10             // Do Fornecedor                       ³
+//³ mv_par11             // Ate o Forncedor                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+WNREL := "PCPR24"
+WNREL := SETPRINT(CSTRING,WNREL,CPERG,@TITULO,CDESC1,CDESC2,CDESC3,.F.,,)
+
+IF NLASTKEY==27
+	RETURN
+ENDIF
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 07/03/02
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+SetDefault(aReturn,cString)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt  := Space(10)
+cbcont := 00
+li     := 80
+m_pag  := 01
+
+cCabec  := ""
+
+xQuant  := 0
+cDiaIni := "01"
+cMesIni := Val(subs(mv_par01,1,2))
+cMesFin := Val(subs(mv_par02,1,2))
+
+cAnoIni := Val(subs(mv_par01,3,4))
+cDiaFin := cMes[cMesFin][02]
+cAnoFin := Val(subs(mv_par02,3,4))
+
+cDatIni := Ctod( cDiaIni+"/"+StrZero(cMesIni,2)+"/"+StrZero(cAnoIni,4) )
+cDatFin := Ctod( cDiaFin+"/"+StrZero(cMesFin,2)+"/"+StrZero(cAnoFin,4) )
+
+If cMesIni <= cMesFin .And. cAnoIni < cAnoFin
+	MsgStop("Periodo Estipulado, Ultrapasa 12 meses...")
+	Return
+ElseIf cMesIni > cMesFin .And. cAnoIni >= cAnoFin
+	MsgStop("Periodo Inicial maior que Periodo Final...")
+	Return
+ElseIf cMesIni > 12 .or. cMesFin > 12
+	MsgStop("Mes Invalido...")
+	Return
+ElseIf cMesIni == cMesFin .And. cAnoIni == cAnoFin
+	xQuant := 1
+ElseIf cMesIni < cMesFin .And. cAnoIni <= cAnoFin
+	xQuant := cMesFin - cMesIni +1
+ElseIf cMesIni > cMesFin .And. cAnoIni < cAnoFin
+	xQuant := cMesFin - cMesIni +1
+End
+
+//IF  mv_par05 = 1
+//	MsgStop("Centro de Custo invalido para esse relatorio...")
+//	Return
+//END
+// --------------------------------------------
+// Monta cabecalho para impressao de relatorio.
+// --------------------------------------------
+xCOL   := 040
+xPOS   := {}
+xMESES := {}
+xIni := cDatIni
+While xIni <= cDatFin
+	If Ascan(xMESES,MONTH(xIni)) == 0
+		aadd(xMESES,MONTH(xIni) )
+		aadd(xPOS   ,xCOL )
+		cCabec  := cCabec + cMes[MONTH(xIni)][1]+"/"+StrZero(year(xIni),4)+"     "
+		xCOL := xCOL + 13
+	Endif
+	xIni := xIni + 1
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Definicao dos cabecalhos                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+titulo := "Produção x Perdas x Devolução Mes à Mes."
+cabec1 := "Descricao                            " + cCabec //+"      Media   Valor Total"
+cabec2 := "Entre: "+dtoc(cDatIni)+" a "+dtoc(cDatFin)
+//         xxxxxxxxxxxxxxx  xxxxxxxxxxxxxxx  999,999,999  999.999.999  9.999.999 99.999.999
+//         Ativo,Dispos.,Tela,Equip...          JAN/2006        JAN/2006
+//         0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                   111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo  := IIF(aReturn[4]==1,15,18)
+
+cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+
+#IFDEF WINDOWS
+	RptStatus({|| Detpcpr24()})
+	Return
+#ENDIF
+
+Static Function Detpcpr24()
+
+vLista  := getProdMes()    // Retorna aProd
+
+
+aSort( vLista ,,,{ |x,y| x[1] + StrZero(x[2],2) > y[1] + StrZero(y[2],2)} )
+totProd:={}
+
+for N:=1 to len(vLista)
+	nPos := aScan(AMSG ,{|X| X[1] == vLista[N][1] })
+	if nPos == 0
+		AAdd(AMSG,{vLista[N][1]})
+	end
+next
+
+aImp     := ARRAY(XQUANT,9)
+xTotal   := Array(xQuant,9)
+xTotal2  := Array(xQuant,2)
+
+//Zerar vetores
+for N:=1 to XQUANT
+	for z:=1 to 7
+		aImp  [N][z]:=0
+		xTotal[N][z]:=0
+		if z <=2
+			xTotal2[N][z]:=0
+		end
+	next
+next
+
+/*Captura a devoluções do mes referente*/
+vDevMes:=getDevMes()
+//aVarCod:={}
+
+/*Captura a qtd de peças transferidas para o processo*/
+aqtdTransf:= getTransMes()
+
+SetRegua(len(AMSG))
+for i:=1 to len(AMSG)
+	xProd:=AMSG[i][1]
+	IncRegua("Produto: "+xProd )
+	//
+	//aVarCod:=getVarCod(xProd)
+	//for len(aVarCod)
+	//
+	for m:=1 to xQuant
+		nMes := XMESES[m]
+		/*Captura a qtd de devoluções do produto de um mes referente*/
+		//devolu:=getDevol(xProd,nMes)     alterado em 28/08/2012
+		
+		nPos1 := aScan(vLista ,{|X| X[1] == xProd .and. X[2]== nMes })
+		/*nProdução e o somatorio de produção + perdas*/
+		nProducao :=IIF(nPos1<>0,vLista[nPos1][4],0)
+		aIMP[m][1]:=IIF(nPos1<>0,vLista[nPos1][3],0)   // Plano
+		aIMP[m][2]:=IIF(nPos1<>0,vLista[nPos1][4],0)   // Procucao Real
+		
+		/*Qtd transferidas para o processo*/
+		nPos2 := aScan(aqtdTransf ,{|X| X[1] == xProd .and. X[2]== nMes })
+		aIMP[m][3]:=IIF(nPos2<>0,aqtdTransf[nPos2][3],0) // Qtd Transferida
+		
+		/*Qtd de devoluções para o fornecedor e interna*/
+		nPosD:= aScan(vDevMes ,{|X| X[1] == xProd .and. X[2]== nMes })
+		//aIMP[m][4]:=devolu //IIF(aIMP[m][1]==0,0,devolu)  // Devolucao Alterado em 28/08/2012
+		aIMP[m][4]:=IIF(nPosD<>0,vDevMes[nPosD][3],0) // Qtd Transferida
+		
+		aIMP[m][5]:=IIF(nPos1<>0,vLista[nPos1][6],0)   // Perda
+		aIMP[m][6]:=IIF(nPos1<>0,vLista[nPos1][5],0)   // Retrabalho
+		
+		/*Conf. solicitacao do allan 06;06;2012
+		aIMP[m][7]:=IIF(nPos1<>0,(aIMP[m][4]/nProducao)*100,0) // % Devolucao
+		aIMP[m][8]:=IIF(nPos1<>0,(aIMP[m][5]/nProducao)*100,0) // % Perda
+		aIMP[m][9]:=IIF(nPos1<>0,(aIMP[m][6]/nProducao)*100,0) // % Retrabalho
+		aIMP[m][7]:=IIF(nPos1<>0,(aIMP[m][4]/nProducao)*100,0) // % Devolucao
+		*/
+		aIMP[m][7]:=IIF(nPos1<>0,(aIMP[m][4]/aIMP[m][1])*100,0)
+		aIMP[m][8]:=IIF(nPos1<>0,(aIMP[m][5]/aIMP[m][1])*100,0) // % Perda
+		aIMP[m][9]:=IIF(nPos1<>0,(aIMP[m][6]/aIMP[m][1])*100,0) // % Retrabalho
+	next
+	
+	xProdDes:=Posicione("SB1",1,xFilial("SB1")+xProd,"B1_DESC")
+	
+	@ LI,000       PSAY xProd //+"  "+ xProdDes
+	xTot      := 0            //
+	xTotProd  := 0            // Produção
+	xTotQtdT  := 0            // Qtd Transferida
+	xTotDev   := 0            // Qtd Devolução
+	xTotPNB   := 0            // Qtd Perda
+	xTotRet   := 0            // Qtd Retrabalho
+	xTotPercD := 0.0          // % Devolução
+	xTotPercP := 0.0          // % Perda
+	xTotPercR := 0.0          // % Retrabalho
+	
+	
+	For N:=1 to 9
+		xTot    :=0
+		For M:=1 to xQuant
+			If M==1
+				@ LI,017      PSAY AMSGPROD[N]
+			EndIf
+			If N<=6
+				@ LI,PCOL()+2 PSAY Transform(aImp[M][N],"@E 999,999,999")
+			Else
+				@ LI,PCOL()+2 PSAY Transform(aImp[M][N],"@E 999,999.999")
+			Endif
+			/*Acm Totais por Produto*/
+			xTot += aImp[M][N]
+			//	        xTot += aImp[M][2]
+			
+			IF N==2
+				xTotProd := xTot
+				xTotal2[M][1]+= aImp[M][N]
+			elseIF N==4
+				xTotDev  := xTot
+			elseIF N==5
+				xTotPNB  := xTot
+			elseIF N==6
+				xTotRet  := xTot
+			EndIF
+			
+			/*Acm Totais por Mes dos produtos transferidos para a produção*/
+			xLOCPAD:=Posicione("SB1",1,xFilial("SB1")+xProd,"B1_LOCPAD")
+			IF xLOCPAD <> "10"
+				if N <= 6//N <> 4 .or. N <> 6
+					xTotal[M][N]+= aImp[M][N]
+				end
+			else
+				if N == 4
+					xTotal2[M][2]+= aImp[M][4]
+				end
+			END
+		Next
+		
+		/*Totais por Produto*/
+		if N > 6    //Porcentagens
+			If N == 7  // Perda
+				xTotPercD:=(xTotDev/xTotProd)*100
+				@ LI,208 PSAY Transform (xTotPercD,"@E 999,999.999")
+			ElseIF N == 8
+				
+				//  For xM:=1 to xQuant
+				//      xTotQtdT += aImp[xM][3]
+				//  next
+				//
+				xTotPercP:=(xTotPNB/xTotProd)*100
+				@ LI,208 PSAY Transform (xTotPercP,"@E 999,999.999")
+			ElseIF N == 9
+				xTotPercR:=(xTotRet/xTotProd)*100
+				@ LI,208 PSAY Transform (xTotPercR,"@E 999,999.999")
+				
+			Endif
+		else
+			@ LI,208 PSAY Transform (xTot,"@E 999,999,999")
+		end
+		
+		Li += 1
+		IF N==1
+			@ LI,000       PSAY subs(xProdDes,1,15)
+		ELSEIF N==2
+			@ LI,000       PSAY subs(xProdDes,16,15)
+		ELSEIF N==3
+			@ LI,000       PSAY subs(xProdDes,31,15)
+		END
+		
+	Next
+	
+	@ LI,000 PSAY Replicate("-",Limite)
+	Li += 1
+	If Li > 64
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+	End
+next
+
+IF     mv_par04 = 1
+	@ LI,017 PSAY "T O T A L    M E N S A L    D A    M O N T A G E M    F I N A L "
+ELSEIF mv_par04 = 2
+	@ LI,017 PSAY "T O T A L    M E N S A L    D A    I M P R E S S Ã O "
+ELSEIF mv_par04 = 3
+	@ LI,017 PSAY "T O T A L    M E N S A L    D A    I N J E Ç Ã O   P L Á S T I C A"
+ELSEIF mv_par04 = 4
+	@ LI,017 PSAY "T O T A L    M E N S A L    D A    I N S E R Ç Ã O   A U T O M A T I CA "
+ENDif
+
+Li += 2
+
+xTot      := 0
+xTotProd  := 0
+xTotQtdT  := 0
+xTotDev   := 0
+xTotPNB   := 0
+xTotPercP := 0.0
+xTotPercD := 0.0
+xTotPercR := 0.0
+
+
+For N:=1 to 9
+	xTot:=0
+	For M:=1 to xQuant
+		If M==1
+			@ LI,017      PSAY AMSGPROD[N]
+		EndIf
+		
+		IF N <= 6
+			@ LI,PCOL()+2 PSAY Transform(xTotal[M][N],"@E 999,999,999")
+			xTot += xTotal[M][N]
+		else
+			if N == 7
+				@ LI,PCOL()+2 PSAY Transform((xTotal[M][4]/xTotal[M][2])*100,"@E 999,999.999")
+			elseIF N==8
+				@ LI,PCOL()+2 PSAY Transform((xTotal[M][5]/xTotal[M][2])*100,"@E 999,999.999")
+			ELSE
+				@ LI,PCOL()+2 PSAY Transform((xTotal[M][6]/xTotal[M][2])*100,"@E 999,999.999")
+			end
+		end
+		//
+		
+		//	    Acm Totais por Produto
+		
+		IF N==2
+			xTotProd := xTot
+			xTotal2[M][1]+= aImp[M][N]
+		elseIF N==4
+			xTotDev  := xTot
+		elseIF N==5
+			xTotPNB  := xTot
+		elseIF N==6
+			xTotRet  := xTot
+		EndIF
+		//
+	Next
+	
+	//Totais por Produto
+	if N > 6//N == 4 .or. N == 6
+		if N == 7
+			xTotPercD:=(xTotDev/xTotProd)*100
+			@ LI,208 PSAY Transform (xTotPercD,"@E 999,999.999")
+		elseIF N == 8
+			// Qtd de pecas transferidas para o processo durante o ano
+			//    For xM:=1 to xQuant
+			//        xTotQtdT += xTotal[xM][3]
+			//    next
+			xTotPercP:=(xTotPNB/xTotProd)*100
+			@ LI,208 PSAY Transform (xTotPercP,"@E 999,999.999")
+		elseIF N == 9
+			xTotPercR:=(xTotRet/xTotProd)*100
+			@ LI,208 PSAY Transform (xTotPercR,"@E 999,999.999")
+		endIF
+	else
+		@ LI,208 PSAY Transform (xTot,"@E 999,999,999")
+	end
+	//
+	Li += 1
+Next
+
+//
+xTotProd  := 0
+xTotPercP := 0.0
+xTotDev   := 0
+xTotPercD := 0.0
+xTotQtdT  := 0
+/*
+For n:=1 to 2
+For M:=1 to xQuant
+If M==1
+@ LI,017       PSAY iif(n=1,"QTD PERDA INT  ","% QTD PERDA INT")
+EndIf
+@ LI,PCOL()+2  PSAY iif(n=1,Transform (xTotal2[M][2],"@E 999,999,999"),Transform ((xTotal2[M][2]/xTotal2[M][1])*100,"@E 999,999.999"))
+IF n==1
+xTotProd+=xTotal2[M][1]
+xTotDev +=xTotal2[M][2]
+End
+next
+@ LI,208 PSAY iif(n=1,Transform (xTotDev,"@E 999,999,999"),Transform ((xTotDev/xTotProd)*100,"@E 999,999.999"))
+Li += 1
+NEXT
+*/
+
+//IF li != 85
+//   roda(cbcont,cbtxt,tamanho)
+//EndIF
+
+Set Device To Screen
+
+dbSelectArea('SB1')
+RetIndex('SB1')
+
+If aReturn[5] == 1
+	Set Printer to
+	dbCommitAll()
+	ourspool(wnrel)
+Endif
+MS_FLUSH()
+Return
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Retorna os valores gastos com materiais mes a mes            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function getProdMes()
+aProd  :={}
+aTemp1 :={}
+aTemp2 :={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Tipo                             ³
+//³ mv_par04             // Ate o Tipo                          ³
+//³ mv_par05             // CCusto                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF  mv_par04 = 1
+	Xcc:="211"
+ELSEIF mv_par04 = 2
+	Xcc:="221"
+ELSEIF mv_par04 = 3
+	Xcc:="231"
+ELSEIF mv_par04 = 4
+	Xcc:="241"
+END
+/*
+cQuery := ""
+cQuery := " SELECT D3_COD, MONTH(D3_EMISSAO) AS MES, (SELECT SUM (C2_QUANT)"
+cQuery += " FROM SC2010 "
+cQuery += " WHERE "
+cQuery += " C2_PRODUTO = D3_COD AND "
+cQuery += " C2_DATPRI >= '"+ DTOS(cDatIni)+"'"
+cQuery += " C2_DATPRI <= '"+ DTOS(cDatFin)+"'"
+cQuery += " C2_TPOP = 'F' AND "
+cQuery += " C2_CC = '"+ Xcc +"'"
+cQuery += " AND SC2010. D_E_L_E_T_ <> '*') AS PLANO,  SUM(D3_PERDA) AS PERDA, SUM(D3_CUSTO1) AS CUSTO, SUM(D3_QUANT) AS QUANT "
+cQuery += " FROM DADOSAP10..SD3010"
+cQuery += " WHERE D3_TM ='400'"
+cQuery += " AND D3_EMISSAO >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND D3_EMISSAO <= '"+ DTOS(cDatFin)+"'"
+cQuery += " AND (D3_TIPO='"+ mv_par03 +"' OR D3_TIPO='"+mv_par04+"')"
+cQuery += " AND D3_CC ='"+ Xcc +"'"
+cQuery += " AND D3_ESTORNO <> 'S'"
+cQuery += " AND D_E_L_E_T_ <> '*'"
+cQuery += " GROUP BY D3_COD, MONTH(D3_EMISSAO)"
+*/
+
+
+cQuery := " SELECT C2_PRODUTO, MONTH(C2_EMISSAO) AS MES, SUM(C2_QUANT)AS PLANO "
+cQuery += " FROM SC2"+xEmpresa+"0"
+cQuery += " INNER JOIN SB1"+xEmpresa+"0 ON C2_PRODUTO = B1_COD "
+cQuery += " WHERE "
+cQuery += "     C2_EMISSAO >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND C2_EMISSAO <= '"+ DTOS(cDatFin)+"'"
+if     mv_par03 == 1
+	cQuery += " AND B1_TIPO='PA' "
+elseif mv_par03 == 2
+	cQuery += " AND B1_TIPO='PI' "
+else
+	cQuery += " AND B1_TIPO in ('PA','PI') "
+endif
+cQuery += " AND C2_CC = '"+ Xcc +"'"
+cQuery += " AND C2_TPOP = 'F' "
+cQuery += " AND SC2"+xEmpresa+"0. D_E_L_E_T_ <> '*' "
+cQuery += " GROUP BY C2_PRODUTO, MONTH(C2_EMISSAO) "
+
+cQuery := ChangeQuery(cQuery)
+TCQUERY cQuery Alias TD3 New      //
+
+cQuery := " SELECT D3_COD, MONTH(D3_EMISSAO) AS MES, SUM(D3_QUANT) AS QUANT, SUM(D3_PERDA) AS PERDA "
+cQuery += " FROM SD3"+xEmpresa+"0 "
+cQuery += " WHERE D3_TM ='400' "
+cQuery += " AND D3_EMISSAO >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND D3_EMISSAO <= '"+ DTOS(cDatFin)+"'"
+if     mv_par03 == 1
+	cQuery += " AND D3_TIPO='PA' "
+elseif mv_par03 == 2
+	cQuery += " AND D3_TIPO='PI' "
+else
+	cQuery += " AND D3_TIPO in ('PA','PI') "
+endif
+cQuery += " AND D3_CC = '"+ Xcc +"'"
+cQuery += " AND D3_ESTORNO <> 'S' "
+cQuery += " AND SD3"+xEmpresa+"0.D_E_L_E_T_ <> '*' "
+cQuery += " GROUP BY D3_COD, MONTH(D3_EMISSAO) "
+
+cQuery := ChangeQuery(cQuery)
+TCQUERY cQuery Alias TD4 New
+
+cQuery := " SELECT C2_PRODUTO, MONTH(C2_EMISSAO) AS MES, SUM(C2_QUANT)AS RETRAB "
+cQuery += " FROM SC2"+xEmpresa+"0 "
+cQuery += " INNER JOIN SB1"+xEmpresa+"0 ON C2_PRODUTO = B1_COD "
+cQuery += " WHERE "
+cQuery += "     C2_EMISSAO >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND C2_EMISSAO <= '"+ DTOS(cDatFin)+"'"
+if     mv_par03 == 1
+	cQuery += " AND B1_TIPO='PA' "
+elseif mv_par03 == 2
+	cQuery += " AND B1_TIPO='PI' "
+else
+	cQuery += " AND B1_TIPO in ('PA','PI') "
+endif
+cQuery += " AND C2_CC = '"+ Xcc +"'"
+cQuery += " AND C2_TPOP = 'R' "
+cQuery += " AND SC2"+xEmpresa+"0. D_E_L_E_T_ <> '*' "
+cQuery += " GROUP BY C2_PRODUTO, MONTH(C2_EMISSAO) "
+
+cQuery := ChangeQuery(cQuery)
+TCQUERY cQuery Alias TD5 New
+
+DbSElectArea("TD4")    // Producao Real e Perdas
+DbGotop()
+While !TD4->(Eof())
+	
+	AAdd(aTemp1,{D3_COD,;    //[1] Cod Produto
+	MES,;    //[2] Mes
+	QUANT,;    //[3] Producao
+	PERDA})    //[4] Perda
+	
+	
+	TD4->(DBSKIP())
+Enddo
+
+dbClearFil(NIL)
+dbCloseArea("TD4")
+dbCloseArea()
+
+DbSElectArea("TD5")        // Retrabalhos
+DbGotop()
+While !TD5->(Eof())
+	
+	AAdd(aTemp2,{C2_PRODUTO,;    //[1] Cod Produto
+	MES,;    //[2] Mes
+	RETRAB})    //[3] Retrabalhos
+	
+	
+	
+	TD5->(DBSKIP())
+Enddo
+dbClearFil(NIL)
+dbCloseArea("TD4")
+dbCloseArea()
+
+DbSElectArea("TD3")       // Plano de Producao
+DbGotop()
+While !TD3->(Eof())
+	
+	//  xGrupo:=Posicione("SB1",1,xFilial("SB1")+D3_COD,"B1_GRUPO")
+	//  xTipo :=Posicione("SB1",1,xFilial("SB1")+D3_COD,"B1_TIPO" )
+	
+	xCod:= C2_PRODUTO
+	nPos  := aScan(aTemp1 ,{|X| X[1] == xCod .and. X[2]== MES })
+	nPost := aScan(aTemp2 ,{|X| X[1] == xCod .and. X[2]== MES })
+	
+	IF nPos == 0 .and. nPost == 0
+		
+		AAdd(aProd,{  xCod,;    //[1] Cod Produto
+		MES,;    //[2] Mes
+		PLANO,;    //[3] Plano de Producao
+		0,;    //[4] Producao Real
+		0,;    //[5] Retrabalho
+		0})    //[6] Perda
+		
+	ELSEIF nPos <> 0 .and. nPost == 0
+		AAdd(aProd,{  xCod,;    //[1] Cod Produto
+		MES,;    //[2] Mes
+		PLANO,;    //[3] Plano de Producao
+		aTemp1[nPos][3],;    //[4] Producao Real
+		0,;    //[5] Retrabalho
+		aTemp1[nPos][4]})    //[6] Perda
+		
+	ELSEIF nPos == 0 .and. nPost <> 0
+		AAdd(aProd,{  xCod,;    //[1] Cod Produto
+		MES,;    //[2] Mes
+		PLANO,;    //[3] Plano de Producao
+		0,;    //[4] Producao Real
+		aTemp2[nPost][3],;    //[5] Retrabalho
+		0})    //[6] Perda
+		
+	ELSEIF nPos <> 0 .and. nPost <> 0
+		IF aTemp1[nPos][4] >= aTemp2[nPost][3]
+			xPerda := aTemp1[nPos][4]  - aTemp2[nPost][3]
+		ELSE
+			xPerda := aTemp2[nPost][3] - aTemp1[nPos][4]
+		ENDIF
+		AAdd(aProd,{  xCod,;    //[1] Cod Produto
+		MES,;    //[2] Mes
+		PLANO,;    //[3] Plano de Producao
+		aTemp1[nPos][3],;    //[4] Producao Real
+		aTemp2[nPost][3],;    //[5] Retrabalho
+		xPerda})    //[6] Perda
+		
+		
+	Endif
+	TD3->(DBSKIP())
+	
+ENDDO
+dbSelectArea("TD3")
+dbClearFil(NIL)
+dbCloseArea("TD3")
+dbCloseArea()
+Return aProd
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Retorna a quantidade de peças devolvidas no mes              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function getDevMes()
+IF     mv_par04 = 1
+	Xcc:="211"
+ELSEIF mv_par04 = 2
+	Xcc:="221"
+ELSEIF mv_par04 = 3
+	Xcc:="231"
+ELSEif mv_par04 = 4
+	Xcc:="241"
+END
+aProdDev:={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Tipo                             ³
+//³ mv_par04             // Ate o Tipo                          ³
+//³ mv_par05             // CCusto                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cQuery := ""
+cQuery := " SELECT BC_PRODUTO, MONTH(BC_DATA) AS MES, SUM(BC_QUANT) AS QUANT"
+cQuery += " FROM " + RetSqlName("SBC") + " "
+cQuery += " WHERE BC_APLIC='"+ Xcc +"'"
+cQuery += " AND BC_DTRM >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND BC_DTRM  <= '"+ DTOS(cDatFin)+"'"
+cQuery += " AND D_E_L_E_T_ = '' "
+cQuery += " GROUP BY BC_PRODUTO, MONTH(BC_DATA)"
+
+cQuery := ChangeQuery(cQuery)
+
+TCQUERY cQuery Alias TD3 New
+
+DbSElectArea("TD3")
+DbGotop()
+While !TD3->(Eof())
+	
+	xTipo := Posicione("SB1",1,xFilial("SB1")+BC_PRODUTO,"B1_TIPO" )
+	
+	xCod:=BC_PRODUTO
+	nPos := aScan(aProdDev ,{|X| X[1] == xCod .and. X[2]== MES })
+	
+	IF nPos == 0
+		AAdd(aProdDev,{  xCod,;    //[1]
+		MES,;    //[2]
+		QUANT})    //[3]
+	ELSE
+		aProdDev[nPos][3]+= QUANT
+	end
+	TD3->(DBSKIP())
+	
+ENDDO
+dbSelectArea("TD3")
+dbClearFil(NIL)
+dbCloseArea("TD3")
+dbCloseArea()
+Return aProdDev
+
+******************************
+//Retorna as devoluçoes
+******************************
+Static Function GetDevol(cProd,nMesRef)
+cDatInif := Ctod( cDiaIni         +"/"+StrZero(nMesRef,2)+"/"+StrZero(cAnoIni,4) )
+cDatFinf := Ctod( CMES[nMesRef][2]+"/"+StrZero(nMesRef,2)+"/"+StrZero(cAnoFin,4) )
+
+
+
+IF  mv_par04 = 1
+	Xcc:="211"
+ELSEIF mv_par04 = 2
+	Xcc:="221"
+ELSEIF mv_par04 = 3
+	Xcc:="231"
+ELSEIF mv_par04 = 4
+	Xcc:="241"
+END
+
+
+nDevo:=0
+aPai := {}
+aOp  := {}
+dbSelectArea("SG1")
+dbSetOrder(2)
+dbSeek(xFilial("SG1")+cProd)
+aAdd(aPai,cProd)
+//aAdd(aPai,cProd)
+/* Não pegar as informações dos itens de ONDE É USADO - Aglair Brito Ishii
+While !Eof() .and. cProd == G1_COMP
+If dDataBase >= SG1->G1_INI .and. dDataBase <= SG1->G1_FIM
+aAdd(aPai,G1_COD)
+//
+cProd_PI:=G1_COD
+xRecno=recno()
+if dbSeek(xFilial("SG1")+cProd_PI)
+While !Eof() .and. cProd_PI == G1_COMP
+If dDataBase >= SG1->G1_INI .and. dDataBase <= SG1->G1_FIM
+cProd_PA:=G1_COD
+aAdd(aPai,cProd_PA)
+End
+dbSkip()
+EndDo
+end
+dbGoto(xRecno)
+//
+EndIf
+dbSkip()
+EndDo
+Fim comentario*/
+dbSelectArea("SC2")
+dbSetOrder(2)
+For fi:=1 to Len(aPai)
+	dbSeek(xFilial("SC2")+aPai[fi]+DTOS(cDatInif),.T.)
+	While !Eof() .and. dtos(C2_DATPRF)<=DTOS(cDatFinf) .and. aPai[fi] == C2_PRODUTO
+		nPosOp := aScan(aOp, C2_NUM+C2_ITEM+C2_SEQUEN+"  " )
+		if nPosOp==0
+			aAdd(aOp,C2_NUM+C2_ITEM+C2_SEQUEN+"  ")
+		end
+		dbSkip()
+	EndDo
+Next
+
+dbSelectArea("SBC")
+xop:=aOp[fi]
+IF dbSeek(xFilial("SBC")+aOp[fi])
+	While !Eof() .and. aOp[fi]==BC_OP
+		If dtos(BC_DTRM) >=DTOS(cDatInif) .and. dtos(BC_DTRM)<=DTOS(cDatFinf) .and. cProd==BC_PRODUTO
+			nPosProd := aScan(aPai, BC_PRODUTO )
+			If nPosProd<>0 .and. BC_APLIC=Xcc
+				nDevo += BC_QUANT
+			EndIf
+		EndIf
+		dbSkip()
+	EndDo
+END
+
+
+
+//if cProd == "B51201234900001"
+//msgstop(cProd)
+//end
+/*Comentado em  28/08/2012
+/*Para a seleção das perdas no periodo  antes buscava o da OP
+For fi:=1 to len(aOp)
+dbSelectArea("SBC")
+xop:=aOp[fi]
+IF dbSeek(xFilial("SBC")+aOp[fi])
+While !Eof() .and. aOp[fi]==BC_OP
+If dtos(BC_DTRM) >=DTOS(cDatInif) .and. dtos(BC_DTRM)<=DTOS(cDatFinf) .and. cProd==BC_PRODUTO
+nPosProd := aScan(aPai, BC_PRODUTO )
+If nPosProd<>0  //BC_APLIC>=Xcc .and. BC_APLIC<=Xcc  .and. nPosProd<>0 		// Teste para Aglair Brito Ishii.and. BC_LOCORIG == "10"  .and. nPosProd<>0
+//aAdd(teste,{BC_OP,BC_QUANT})//
+//if cProd == "B51201234900001"
+nDevo += BC_QUANT
+//msgstop("OP..." + xop)
+//msgstop(BC_QUANT     )
+//msgstop(nDevo        )
+//end
+EndIf
+EndIf
+dbSkip()
+EndDo
+END
+Next
+*/
+
+
+Return nDevo
+
+
+******************************
+//Retorna as devoluçoes
+******************************
+Static Function getVarCod(cComp)
+
+aCompf:={}
+aVarProdf:={}
+IF     mv_par04 = 1
+	Xcc:="211"
+ELSEIF mv_par04 = 2
+	Xcc:="221"
+ELSEIF mv_par04 = 3
+	Xcc:="231"
+ELSEIF mv_par04 = 4
+	Xcc:="241"
+END
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Tipo                             ³
+//³ mv_par04             // Ate o Tipo                          ³
+//³ mv_par05             // CCusto                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cQuery := ""
+cQuery := " SELECT G1_COD"
+cQuery += " FROM DADOSAP10..SG1"+xEmpresa+"0"
+cQuery += " WHERE  D_E_L_E_T_ <> '*'"
+cQuery += " AND G1_INI >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND G1_FIM <= '"+ DTOS(cDatFin)+"'"
+cQuery += " AND G1_COMP <= '"+ cComp +"'"
+
+cQuery := ChangeQuery(cQuery)
+
+TCQUERY cQuery Alias TD1 New      // Tabela de Funcionario Temporarios
+
+DbSElectArea("TD1")
+DbGotop()
+While !TD1->(Eof())
+	
+	xCod := G1_COD
+	
+	nPos := aScan(aCompf ,{|X| X[1] == xCod })
+	
+	if nPos == 0
+		AAdd(aCompf,{xCod})
+	end
+	
+	TD1->(DBSKIP())
+	
+ENDDO
+dbSelectArea("TD1")
+dbClearFil(NIL)
+dbCloseArea("TD1")
+dbCloseArea()
+
+cQuery := ""
+cQuery := " SELECT MONTH(BC_DTRM) AS MES, SUM(BC_QUANT) AS QUANT"
+cQuery += " FROM DADOSAP10..SBC"+xEmpresa+"0"
+cQuery += " WHERE  BC_APLIC='"+ Xcc +"'"
+cQuery += " AND BC_DTRM >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND BC_DTRM  <= '"+ DTOS(cDatFin)+"'"
+cQuery += " AND D_E_L_E_T_ <> '*'"
+if len(aCompf)<>0
+	cQuery += " AND ( "
+	for fi:=1 to len(aCompf)
+		if fi > 1
+			cQuery +=" OR "
+		end
+		cQuery += " BC_PRODUTO ='"+ aCompf[fi][1] +"'"
+	next
+	cQuery += " )"
+end
+cQuery += " GROUP BY MONTH(BC_DTRM)"
+
+cQuery := ChangeQuery(cQuery)
+
+TCQUERY cQuery Alias TD2 New      // Tabela de Funcionario Temporarios
+
+DbSElectArea("TD2")
+DbGotop()
+While !TD2->(Eof())
+	
+	//xTipo :=Posicione("SB1",1,xFilial("SB1")+BC_PRODUTO,"B1_TIPO" )
+	
+	//xCod:=BC_PRODUTO
+	nPos := aScan(aVarProdf ,{|X| X[1] == xCod .and. X[2]== MES })
+	
+	IF nPos == 0
+		AAdd(aVarProdf,{ cComp,;   //[1]
+		MES,;    //[2]
+		QUANT})    //[3]
+	ELSE
+		aVarProdf[nPos][3]+= QUANT
+	end
+	TD2->(DBSKIP())
+	
+ENDDO
+dbSelectArea("TD2")
+dbClearFil(NIL)
+dbCloseArea("TD2")
+dbCloseArea()
+
+Return aVarProdf
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Retorna a quantidade de peçãs Transferidas no mes              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function getTransMes()
+IF     mv_par04 = 1
+	Xcc:="211"
+ELSEIF mv_par04 = 2
+	Xcc:="221"
+ELSEIF mv_par04 = 3
+	Xcc:="231"
+ELSEIF mv_par04 = 4
+	Xcc:="241"
+END
+aProdTrans:={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Tipo                             ³
+//³ mv_par04             // Ate o Tipo                          ³
+//³ mv_par05             // CCusto                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cQuery := ""
+cQuery := " SELECT D3_COD, MONTH(D3_EMISSAO) AS MES, SUM(D3_QUANT) AS QUANT,SUM(D3_CUSTO1) AS CUSTO"
+cQuery += " FROM DADOSAP10..SD3"+xEmpresa+"0"
+cQuery += " WHERE D3_TM ='600'"
+cQuery += " AND D3_EMISSAO >= '"+ DTOS(cDatIni)+"'"
+cQuery += " AND D3_EMISSAO <= '"+ DTOS(cDatFin)+"'"
+cQuery += " AND D3_ESTORNO <> 'S'"
+cQuery += " AND D_E_L_E_T_ <> '*'"
+cQuery += " GROUP BY D3_COD, MONTH(D3_EMISSAO)"
+
+cQuery := ChangeQuery(cQuery)
+
+TCQUERY cQuery Alias TD3 New      // Tabela de Funcionario Temporarios
+
+DbSElectArea("TD3")
+DbGotop()
+While !TD3->(Eof())
+	
+	//xTipo :=Posicione("SB1",1,xFilial("SB1")+BC_PRODUTO,"B1_TIPO" )
+	
+	xCod:=D3_COD
+	nPos := aScan(aProdTrans ,{|X| X[1] == xCod .and. X[2]== MES })
+	
+	IF nPos == 0
+		AAdd(aProdTrans,{xCod,;    //[1]
+		MES,;    //[2]
+		QUANT,;    //[3]
+		CUSTO})    //[4]
+	end
+	TD3->(DBSKIP())
+	
+ENDDO
+dbSelectArea("TD3")
+dbClearFil(NIL)
+dbCloseArea("TD3")
+dbCloseArea()
+Return aProdTrans
+
+Return
