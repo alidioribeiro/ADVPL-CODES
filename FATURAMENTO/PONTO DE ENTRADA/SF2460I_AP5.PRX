@@ -1,0 +1,100 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+User Function SF2460I()        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CALIAS,CRECNO,CNUMPDV,XNATUREZ,")
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SF2460I  ³ Autor ³Jorge Silveira da Silva³ Data ³ Abr/2000 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Grava impressora fiscal utilizada  (DOS/WINDOWS)           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Verifica se existe o campo para impressora fiscal e grava  ³±±
+±±³          ³ qual impressora foi utilizada                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±± 
+±±³ Alteracao³ Jorge Em: 03/12/07                                         ³±±
+±±³          ³ Foi ajustado o valor da fatura, para desconto da deducao de³±±
+±±³          ³ 6% sendo: 1 para o PIS e 5 para o COFINS.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+cAlias := alias()
+cRecno := recno()
+
+// Numero do PDV que efetuou a venda
+If SF2->(FieldPos(F2_PDV)) > 0
+	#IFNDEF WINDOWS
+		cNumPdv:= Substr(LjEnviaBm("35|14"),4,4)
+	#ELSE
+		cNumPdv:= CallMp20Fi("|35|14|")
+	#ENDIF	
+	Reclock("SF2",.F.)
+	Replace F2_PDV With cNumPdv
+EndIf
+
+dbSelectArea("SD2")
+dbSetOrder(3)
+dbSeek(xfilial("SD2")+SF2->F2_DOC+SF2->F2_Serie)
+
+dbSelectArea("SF4")
+dbSetOrder(1)
+dbSeek(xfilial("SF4")+SF2->F2_TES)
+
+dbSelectArea("SF2")
+Reclock("SF2",.F.)
+SF2->F2_TES := SD2->D2_TES
+msUnlock()
+
+dbSelectArea("SE1")
+dbSetOrder(1)
+dbSeek(xfilial("SE1")+SF2->F2_Serie+SF2->F2_DOC)
+While !Eof() .And. SF2->F2_Serie+SF2->F2_Doc == SE1->E1_Prefixo+SE1->E1_Num
+
+      xNaturez := ""
+      xIndice  := (100 - SF4->F4_BCRDPIS - SF4->F4_BCRDCOF) // PIS/COF a recolher NSSP.
+      xValFat  := E1_Valor
+      xDeducao := xValFat * 0.006
+      //xDeducao := Transform(xValFat * 0.006,"@e 9,999.99")
+           
+      If AllTrim(SF2->F2_TES)     $ "510/511/519/532/534" // Venda Incentivada
+         xNaturez := "552"
+      ElseIf AllTrim(SF2->F2_TES) $ "520/521/512" // Venda Nao Incentivada
+         xNaturez := "565"
+      ElseIf AllTrim(SF2->F2_TES) $ "523"         // Venda de Sucata
+         xNaturez := "588" 
+      ElseIf AllTrim(SF2->F2_TES) $ "591/691/710" // Venda de Ativo Imobilizado
+         xNaturez := "591"
+      ElseIf AllTrim(SF2->F2_TES) $ "501"         // Venda Merc. Interno - NSSP
+         xNaturez := "0451" 
+         xValFat  := (E1_Valor * xIndice /100)
+      EndIf
+      
+      IF SM0->M0_CODIGO == "04" .And. SF2->F2_TES $ "501/502" 
+         xValFat := xValFat - xDeducao
+      End
+
+      RecLock("SE1",.F.)
+      SE1->E1_Naturez := xNaturez
+      SE1->E1_Valor   := xValFat
+      SE1->E1_Saldo   := xValFat
+      SE1->E1_VlCruz  := xValFat
+      MsUnlock()
+
+      dbSkip()
+EndDo
+
+dbSelectArea(cAlias)
+dbgoto(cRecno)
+
+Return(NIL)

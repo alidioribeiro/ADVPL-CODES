@@ -1,0 +1,543 @@
+#INCLUDE "rwmake.ch"
+//#INCLUDE "Protheus.ch"   // Problema com a janela inicial
+#include "ap5mail.ch"
+#Include "TOPCONN.CH"
+#Include "TBICONN.CH"
+
+USER FUNCTION PCPR25()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ DECLARACAO DE VARIAVEIS UTILIZADAS NO PROGRAMA ATRAVES DA FUNCAO    ³
+//³ SETPRVT, QUE CRIARA SOMENTE AS VARIAVEIS DEFINIDAS PELO USUARIO,    ³
+//³ IDENTIFICANDO AS VARIAVEIS PUBLICAS DO SISTEMA UTILIZADAS NO CODIGO ³
+//³ INCLUIDO PELO ASSISTENTE DE CONVERSAO DO AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SETPRVT("CBTXT,CBCONT,CABEC1,CABEC2,WNREL,TITULO")               
+SETPRVT("CDESC1,CDESC2,CDESC3,TAMANHO,LIMITE,XSAIDA")
+SETPRVT("AORD,LCONTINUA,CUM,LEND,ARETURN,NOMEPROG")
+SETPRVT("NLASTKEY,CPERG,XCPI,GQUANT,GF_MPN,GF_MPI")
+SETPRVT("XCOMP,XDATA,XDATFCH,XMES,XCOMPRA,XDATFIN")
+SETPRVT("CDATINI,CDATFIN,XDATINI,XSALPED,CSTRING")
+SETPRVT("XMRP,XCOMPRA,APDTS,XGERMES,dValIni,dValFin,xEmpresa") 
+
+		
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³PCPR23_AP8ºAutor  ³Remerson Mogi       º Data ³  07/10/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ DEFINE VARIAVEIS                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+*/
+
+titulo    := PADC("Lista as vendas Mes a Mes."                                   ,30)
+cDesc1    := PADC("Este Programa tem como objetivo, emitir a relacao de vendas  ",64)
+cDesc2    := PADC(", Mes a Mes. Conforme especificacoes em Parametros."          ,58)
+cDesc3    := ""
+TAMANHO   := "G"
+LIMITE    := 220
+CSTRING   := "SD2"
+AORD      := {} //-- ORDEM
+LCONTINUA := .T.
+CUM       := ""
+LEND      := .F.
+ARETURN   := { "ZEBRADO", 1,"ADMINISTRACAO", 2, 2, 1, "",1 }
+NOMEPROG  := "PCPR25"
+NLASTKEY  := 0
+CPERG     := "PCPR23"
+CMES      := {}
+
+AMSG      := {}
+vLista    := {}
+aCliente  := {}
+xEmpresa  := SM0->M0_CODIGO 
+ 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VERIFICA AS PERGUNTAS SELECIONADAS                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+PERGUNTE(CPERG,.F.)
+
+AADD(CMES,{"JAN","31","08"})
+//calculo para bissexto
+If   U_Bissexto()
+	AADD(CMES,{"FEV","29","09"})
+Else  
+	AADD(CMES,{"FEV","28","09"})		
+EndIf 	
+AADD(CMES,{"MAR","31","10"})
+AADD(CMES,{"ABR","30","11"})
+AADD(CMES,{"MAI","31","12"})
+AADD(CMES,{"JUN","30","01"})
+AADD(CMES,{"JUL","31","02"})
+AADD(CMES,{"AGO","31","03"})
+AADD(CMES,{"SET","30","04"})
+AADD(CMES,{"OUT","31","05"})
+AADD(CMES,{"NOV","30","06"})
+AADD(CMES,{"DEZ","31","07"})  
+
+AMSGPROD:= {"QTD            ",;
+            "CUSTO          "}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Periodo Incial (mmaaaa)             ³
+//³ mv_par02             // Periodo Final  (mmaaaa)             ³
+//³ mv_par03             // Do Tipo                             ³
+//³ mv_par04             // Ate o Tipo                          ³
+//³ mv_par05             // Processo                            ³
+//³ mv_par06             // Do Cliente                          ³
+//³ mv_par07             // Ate Cliente                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+WNREL := "PCPR25"
+WNREL := SETPRINT(CSTRING,WNREL,CPERG,@TITULO,CDESC1,CDESC2,CDESC3,.F.,,)
+
+IF NLASTKEY==27
+	RETURN
+ENDIF
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 07/03/02
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+SetDefault(aReturn,cString)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt  := Space(10)
+cbcont := 00
+li     := 80
+m_pag  := 01
+
+cCabec  := ""
+
+xQuant  := 0
+cDiaIni := "01"
+cMesIni := Val(subs(mv_par01,1,2))
+cMesFin := Val(subs(mv_par02,1,2))
+
+cAnoIni := Val(subs(mv_par01,3,4))
+cDiaFin := cMes[cMesFin][02]
+cAnoFin := Val(subs(mv_par02,3,4))
+
+cDatIni := Ctod( cDiaIni+"/"+StrZero(cMesIni,2)+"/"+StrZero(cAnoIni,4) )
+cDatFin := Ctod( cDiaFin+"/"+StrZero(cMesFin,2)+"/"+StrZero(cAnoFin,4) )
+
+If cMesIni <= cMesFin .And. cAnoIni < cAnoFin
+	MsgStop("Periodo Estipulado, Ultrapasa 12 meses...")
+	Return
+ElseIf cMesIni > cMesFin .And. cAnoIni >= cAnoFin
+	MsgStop("Periodo Inicial maior que Periodo Final...")
+	Return
+ElseIf cMesIni > 12 .or. cMesFin > 12
+	MsgStop("Mes Invalido...")
+	Return
+ElseIf cMesIni == cMesFin .And. cAnoIni == cAnoFin
+	xQuant := 1
+ElseIf cMesIni < cMesFin .And. cAnoIni <= cAnoFin
+	xQuant := cMesFin - cMesIni +1
+ElseIf cMesIni > cMesFin .And. cAnoIni < cAnoFin
+	xQuant := cMesFin - cMesIni +1
+End
+
+// --------------------------------------------
+// Monta cabecalho para impressao de relatorio.
+// --------------------------------------------
+xCOL   := 040
+xPOS   := {}
+xMESES := {}
+xIni := cDatIni
+
+While xIni <= cDatFin
+	If Ascan(xMESES,MONTH(xIni)) == 0
+		aadd(xMESES,MONTH(xIni) )
+		aadd(xPOS   ,xCOL )
+		cCabec  := cCabec + cMes[MONTH(xIni)][1]+"/"+StrZero(year(xIni),4)+"     "
+		xCOL := xCOL + 13
+	Endif
+	xIni := xIni + 1
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Definicao dos cabecalhos                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+titulo := "Faturamento Mes à Mes. "
+cabec1 := "Descricao                            " + cCabec //+"      Media   Valor Total"
+cabec2 := "Entre: "+dtoc(cDatIni)+" a "+dtoc(cDatFin)
+//         xxxxxxxxxxxxxxx  xxxxxxxxxxxxxxx  999,999,999  999.999.999  9.999.999 99.999.999
+//         Ativo,Dispos.,Tela,Equip...          JAN/2006        JAN/2006
+//         0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                   111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo  := IIF(aReturn[4]==1,15,18)
+
+cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+
+vLista  := getFatMes()    // Retorna aFatura
+
+//Add Produtos         GRUPO + CODIGO        +TIPO        
+aSort( vLista ,,,{ |x,y| x[7]+x[5]+subs(x[1],3,12) < y[7]+y[5]+subs(y[1],3,12) } )
+
+totProd:={}
+for N:=1 to len(vLista)
+	IF subs(vLista[N][1],1,2)<>"RT" 	   
+	//Total das partes
+	xAux:=""
+	xProdDes:=Posicione("SB1",1,xFilial("SB1")+vLista[N][1],"B1_DESC")
+	//msgstop(subs(vLista[N][5],1,3))
+	
+   //	msgstop(vLista[N][7]+'-'+xProdDes+'-'+ StrZero(vLista[N][2],2)+'-'+ Transform(vLista[N][3],"@E 999,999,999")+'-'+Transform(vLista[N][4],"@E 999,999.99"))  
+	
+	DO CASE 
+	   //Case subs(xProdDes,1,6)$"PAINEL/*PAINEL/**PAINEL" 
+	   Case subs(xProdDes,1,6)$"PAINEL/*PAINE/**PAIN"      
+	        xAux:="PAINEL"
+	   Case subs(xProdDes,1,6)=="SENSOR"
+	        xAux:="KSS"
+	   OTHERWISE
+	        xDesCli    :=Posicione("SA1",1,xFilial("SA1")+vLista[N][7],"A1_NOME")
+	        xAux:="ASTEC" 
+	
+	END CASE      
+           //Cliente + Classificação do Produto + Mes      
+           codCli:=subs(vLista[N][7],1,3)           
+           nPos := aScan(totProd ,{|X| X[1] == codCli .and. X[2]== xAux .and. X[3]== vLista[N][2] })   
+	       
+	       if nPos==0            //HONDA Codigo 001/002
+	          AAdd(totProd,{      codCli,;    //[1] Cliente  
+	                                xAux,;    //[2] Classificação do Produto
+	                        vLista[N][2],;    //[3] Mes
+	                        vLista[N][3],;    //[4] Qtd
+	                        vLista[N][4]})    //[5] Custo
+	                        
+	      //   msgstop(codCli+'-'+xProdDes+'-'+ StrZero(vLista[N][2],2)+'-'+ Transform(vLista[N][3],"@E 999,999,999")+'-'+Transform(vLista[N][4],"@E 999,999.99"))                      
+	       else
+	      //  msgstop(codCli+'-'+xProdDes+'-'+ StrZero(vLista[N][2],2)+'-'+ Transform(vLista[N][3],"@E 999,999,999")+'-'+Transform(vLista[N][4],"@E 999,999.99"))
+	          totProd[nPos][4]+=vLista[N][3]
+	          totProd[nPos][5]+=vLista[N][4]	       
+	       end
+	       nPos := aScan(aCliente ,{|X| X[1] == vLista[N][7] }) 
+	       if nPos == 0 
+	          AAdd(aCliente,{codCli})  	  
+	       end
+	END
+	    //
+	    
+   	nPos := aScan(AMSG ,{|X| X[1] == vLista[N][1] }) 
+	if nPos == 0
+ 	   AAdd(AMSG,{vLista[N][1]})  	  
+ 	end
+next 
+
+aImp     := ARRAY(XQUANT,2)
+xTotal   := Array(xQuant,2)
+//Zerar vetores
+for N:=1 to XQUANT
+        aImp[N][1]:=0
+        aImp[N][2]:=0
+        xTotal[N][1]:=0
+        xTotal[N][2]:=0   
+next
+for i:=1 to len(AMSG)
+    xProd:=AMSG[i][1]
+    
+    for m:=1 to xQuant
+        aImp[M][1]:=0
+        aImp[M][2]:=0   
+        nMes := XMESES[m]        
+        nPos := aScan(vLista ,{|X| X[1] == xProd .and. X[2]== nMes }) 
+        if nPos > 0
+           While !eof().and. vLista [nPos][1] == xProd .and. vLista [nPos][2]== nMes        
+             aIMP[m][1]+= vLista[nPos][3] 
+             aIMP[m][2]+= vLista[nPos][4]  
+             nPos++
+             If nPos>Len(vLista)
+                //msgstop('Ultimo registro...' )
+                exit
+             Endif
+           Enddo       
+       Endif
+    next
+
+    xProdDes:=Posicione("SB1",1,xFilial("SB1")+xProd,"B1_DESC")
+
+    @ LI,000       PSAY xProd +"  "+ xProdDes
+    li++       
+
+    xTotQuant := 0
+    xTotCusto := 0
+
+    For N:=1 to 2
+	    For M:=1 to xQuant
+		    If M==1
+		       @ LI,017      PSAY AMSGPROD[N]
+    	    EndIf                                                     
+		   // @ LI,PCOL()+IIF(N==1,2,1) PSAY IIF(N==1,Transform(aImp[M][N],"@E 999,999,999"),Transform(aImp[M][N],"@E 9,999,999.99")) 
+		    @ LI,PCOL()+IIF(N==1,2,1) PSAY IIF(N==1,Transform(aImp[M][N],"@E 999,999,999"),Transform(aImp[M][N],"@E 9,999,999.99")) 
+    
+	   
+	        IIF (N==1,xTotQuant    += aImp[M][N],xTotCusto += aImp[M][N]) 
+	   
+	        IIF (N==1,xTotal[m][n] += aImp[m][n],xTotal[m][n] += aImp[m][n]) 
+	    
+	    Next
+ 
+        if N=1    
+           @ LI,192 PSAY "Total Qtd:   "+ Transform (xTotQuant,"@E 999,999,999") 
+           Li += 1
+        else
+           @ LI,192 PSAY "Total Custo:"+ Transform (xTotCusto,"@E 9,999,999.99")
+           Li += 1
+        endif
+    Next
+   	If Li > 65
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+		//LI++
+	End
+    //LI++  
+    @ LI,000 PSAY Replicate("-",Limite)
+	Li += 1
+next
+     
+   For N:=1 to 2
+	   For M:=1 to xQuant
+		   If M==1
+		      @ LI,011      PSAY "Total "+AMSGPROD[N]
+	   	   EndIf                                                     
+		   @ LI,PCOL()+IIF(N==1,2,1) PSAY IIF(N==1,Transform (xTotal[m][n],"@E 999,999,999"),Transform(xTotal[m][n],"@E 9,999,999.99"))
+       Next
+       Li += 1 
+   Next
+   
+      
+// Total detalhado para o CCusto 211 -Produção
+IF mv_par05 == "1" .and. (mv_par03 == "PA" .or. mv_par04 == "RT")
+   If Li > 65
+      Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+   End         
+   AMSGTOT := {"PAINEL            ",;
+               "ASTEC             ",;
+               "KSS               "}   
+   xcli:=""      
+   for i:=1 to len(aCliente)             
+       if xcli # aCliente[i][1]
+          Li += 1 
+          xDesCli    :=Posicione("SA1",1,xFilial("SA1")+aCliente[i][1],"A1_NOME")
+          @ LI,000 PSAY xDesCli
+          li+=2                   
+       end            
+       xcli:=aCliente[i][1]
+              
+       for p:=1 to len(AMSGTOT)
+           for m:=1 to xQuant
+               nMes := XMESES[m]        
+               nPos := aScan(totProd ,{|X| X[1] == xcli  .and. X[2]== alltrim(AMSGTOT[p]) .and. X[3]== nMes }) 
+               aIMP[m][1]:=IIF(nPos<>0,totProd[nPos][4],0)//;IIF(nPos<>0,MSGSTOP(totProd[nPos][4]),0)
+               aIMP[m][2]:=IIF(nPos<>0,totProd[nPos][5],0)
+           next
+           @ LI,000 PSAY AMSGTOT[p]
+       
+           li++  
+           xTotQuant:=0
+           xTotCusto:=0       
+           For N:=1 to 2
+	           For M:=1 to xQuant
+		           If M==1		          
+		              @ LI,017      PSAY AMSGPROD[N]
+    	           EndIf                                                     
+		           @ LI,PCOL()+IIF(N==1,2,1) PSAY IIF(N==1,Transform(aImp[M][N],"@E 999,999,999"),Transform(aImp[M][N],"@E 9,999,999.99")) 
+	   
+	               IIF (N==1,xTotQuant += aImp[M][N],xTotCusto += aImp[M][N]) 	    
+	           Next
+ 
+               if N=1    
+                  @ LI,192 PSAY "Total Qtd:     "+ Transform (xTotQuant,"@E 999,999,999") 
+                  Li += 1
+               else   
+                  @ LI,192 PSAY "Total Custo:"+ Transform (xTotCusto,"@E 999,999,999.99")
+                  Li += 1
+               endif 
+               xTotQuant:=0
+               xTotCusto:=0
+           next
+       Next
+       If Li > 65
+ 	      Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+       End         
+       @ LI,000 PSAY Replicate("-",Limite)
+       Li += 1
+next 
+END
+//
+
+   
+IF li != 85
+   roda(cbcont,cbtxt,tamanho)
+EndIF
+
+Set Device To Screen
+
+dbSelectArea('SB1')
+RetIndex('SB1')
+
+If aReturn[5] == 1
+   Set Printer to
+   dbCommitAll()
+   ourspool(wnrel)
+Endif
+MS_FLUSH()      
+Return
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Retorna a quantidade e valor das vendas  mes a mes           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function getFatMes()
+ aFatura:={}                                
+ Devolucao:={}
+           
+/* 
+ cQuery := ""
+ cQuery := " SELECT D1_COD,D1_FORNECE, MONTH(D1_DTDIGIT) AS MES, SUM(D1_QUANT) AS QUANT, SUM(D1_CUSTO) AS CUSTO "
+ cQuery += " FROM DADOSAP10..SD1010 " 
+ cQuery += " WHERE D1_DTDIGIT>= '"+ DTOS(cDatIni)+"'" 
+ cQuery += " AND D1_DTDIGIT <= '"+ DTOS(cDatFin)+"'"   
+ cQuery += " AND D_E_L_E_T_ <> '*' AND D1_TIPO='D' "
+ cQuery += " GROUP BY D1_COD, MONTH(D1_DTDIGIT),D1_FORNECE" 
+*/
+cQuery := ""
+cQuery += " SELECT D1_COD,D1_FORNECE, MONTH(D1_DTDIGIT) AS MES, SUM(D1_QUANT) AS QUANT, SUM(D1_CUSTO) AS CUSTO "
+cQuery += "  FROM DADOSAP10..SD1010  "
+cQuery += "  INNER JOIN DADOSAP10..SF4010 ON (D1_TES = F4_CODIGO) "
+cQuery += " WHERE "
+cQuery += " DADOSAP10..SD1010.D_E_L_E_T_ <> '*' AND "
+cQuery += " DADOSAP10..SF4010.D_E_L_E_T_ <> '*' AND "
+cQuery += " D1_DTDIGIT >= '"+ DTOS(cDatIni)+"'  AND " 
+cQuery += " D1_DTDIGIT <= '"+ DTOS(cDatFin)+"'  AND "   
+cQuery += " (D1_TIPO='D' AND F4_ESTOQUE='S') "
+cQuery += " GROUP BY D1_COD, MONTH(D1_DTDIGIT),D1_FORNECE "
+
+cQuery := ChangeQuery(cQuery)
+
+ TCQUERY cQuery Alias TD1 New      // Tabela de Funcionario Temporarios
+ DbSelectArea("TD1")
+ DbGotop()    
+ While !Eof()
+	 aaDD(Devolucao,{TD1->D1_COD,TD1->D1_FORNECE,TD1->MES, TD1->QUANT,TD1->CUSTO,0}	)
+	 DbSelectArea("TD1")
+	 DbSkip()
+ EndDo	 
+ DbSelectArea("TD1")
+ DbCloseArea("TD1")            
+
+ cQuery := ""
+ cQuery := " SELECT D2_COD,D2_CLIENTE, MONTH(D2_EMISSAO) AS MES, SUM(D2_QUANT) AS QUANT, SUM(D2_CUSTO1) AS CUSTO, SUM(D2_QTDEDEV) AS DEVOL"
+ cQuery += " FROM DADOSAP10..SD2010 " 
+ cQuery += " WHERE D2_LOCAL='20'" 
+ cQuery += " AND D2_EMISSAO >= '"+ DTOS(cDatIni)+"'" 
+ cQuery += " AND D2_EMISSAO <= '"+ DTOS(cDatFin)+"'"   
+ cQuery += " AND D2_CLIENTE BETWEEN '"+ mv_par06+"' AND '"+mv_par07+"'"   
+ //cQuery+= " AND D2_TES IN ('510','511','512','519','520','534','711','712','611','513')"  Antes
+ cQuery += "  AND D2_TES IN ('504','510','511','513','520','528','529','552','512','514','584','597','523','548','549','611','613','591','711','714','700','712') " 
+ cQuery += " AND D_E_L_E_T_ <> '*'"
+ cQuery += " GROUP BY D2_COD, MONTH(D2_EMISSAO),D2_CLIENTE" 
+ 
+ cQuery := ChangeQuery(cQuery)
+
+ TCQUERY cQuery Alias TD2 New      // Tabela de Funcionario Temporarios
+ 
+ DbSElectArea("TD2")                                                      
+ 
+ DbGotop() 
+ While !TD2->(Eof())   
+ 
+    xCod  :=D2_COD
+    xGrupo:=Posicione("SB1",1,xFilial("SB1")+D2_COD,"B1_GRUPO")
+    xTipo :=Posicione("SB1",1,xFilial("SB1")+D2_COD,"B1_TIPO" )
+        
+    //xCli  :=D2_CLIENTE
+    //if subs(xCli,1,3) $ "001/002/"
+    //   xCli := "002"
+    //end
+
+    nPos := aScan(aFatura ,{|X| X[1] == xCod .and. X[2]== MES .AND. X[7] == subs(D2_CLIENTE,1,3)})
+
+
+	nPosD:=aScan(Devolucao,{|X| X[1] == xCod .and. X[3]== MES .AND. X[2] == subs(D2_CLIENTE,1,3)})
+
+	/*Alterado pela Aglair ***/
+    IF nPos == 0                
+	AAdd(aFatura,{xCod,;       //[1]
+	               MES,;       //[2]
+           QUANT,;       //[3]
+	             CUSTO,;       //[4]
+	            xGrupo,;       //[5]
+	             xTipo,;       //[6]  
+        subs(D2_CLIENTE,1,3)}) //[7]     
+    ELSE
+	  aFatura[nPos][3]+= QUANT
+      aFatura[nPos][4]+= CUSTO
+    end          
+    If nPos==0 .and. nPosD>0
+       aFatura[Len(aFatura)][3]-=Devolucao[nPosD][4]
+       aFatura[Len(aFatura)][4]-=Devolucao[nPosD][5]
+       Devolucao[nPosD][6]:=1
+
+    EndIf
+    
+    
+
+    TD2->(DBSKIP())
+    
+ ENDDO    
+ /***Houve devolução mas não faturamento no período*****/
+//	 aaDD(Devolucao,{TD1->D1_COD,TD1->D1_FORNECE,TD1->MES, TD1->QUANT,TD1->CUSTO,0}	)
+ 
+ For i:=1 to len(Devolucao)
+	// aaDD(Devolucao,{TD1->D1_COD,TD1->D1_FORNECE,TD1->MES,TD1->CUSTO}	
+
+
+    if  Devolucao[i][6]==0 
+	    xCod  :=Devolucao[i][1]
+    	xGrupo:=Posicione("SB1",1,xFilial("SB1")+xCod,"B1_GRUPO")
+	    xTipo :=Posicione("SB1",1,xFilial("SB1")+xCod,"B1_TIPO" )
+		AAdd(aFatura,{xCod,;       //[1]
+		               Devolucao[i][3],;       //[2]
+                     Devolucao[i][4]*-1,;       //[3]
+	        	     Devolucao[i][5]*-1,;       //[4]
+	            xGrupo,;       //[5]
+	             xTipo,;       //[6]  
+        subs(Devolucao[i][2],1,3)}) //[7]     
+
+ 	EndIf
+ Next
+
+ dbSelectArea("TD2")
+ dbClearFil(NIL)
+ dbCloseArea("TD2")
+ dbCloseArea()
+ Return aFatura
+
+       

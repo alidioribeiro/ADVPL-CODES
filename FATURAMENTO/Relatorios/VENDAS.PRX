@@ -1,0 +1,339 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 08/03/02
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+User Function fatr01()        // incluido pelo assistente de conversao do AP5 IDE em 08/03/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CBTXT,CBCONT,CABEC1,CABEC2,WNREL,TITULO")
+SetPrvt("CDESC1,CDESC2,CDESC3,TAMANHO,LIMITE,CSTRING")
+SetPrvt("AORD,LCONTINUA,CUM,LEND,ARETURN,NOMEPROG")
+SetPrvt("NLASTKEY,CPERG,XGERVO,XGERVP,XGERSA,_CFLAG")
+SetPrvt("LI,M_PAG,NTIPO,CARQNTX,CINDCOND,XGERQTD")
+SetPrvt("XGERVAL,XGERIPI,XCODIGO,XPRCVEN,XTOTQTD,XTOTVAL")
+SetPrvt("XTOTIPI,xI")
+SetPrvt("xGQtd,xGVal,xTQtd,xTVal")
+
+#IFNDEF WINDOWS
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 08/03/02 ==> 	#DEFINE PSAY SAY
+#ENDIF
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ FATR01   ³ Autor ³ Jorge Silveira        ³ Data ³ 06.04.00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Resumo de vendas por produto.                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ rdmake ESTR04 -x                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+CbTxt     := ""
+CbCont    := ""
+cabec1    := ""
+cabec2    := ""
+wnrel     := ""
+titulo    := PADC("Resumo de Vendas por Produto",74)
+cDesc1    := PADC("Este programa tem com objetivo, imprimir a Resumo sintetico",74)
+cDesc2    := PADC("de vendas por produtos em um determinado periodo.",74)
+cDesc3    := ""
+tamanho   := "G"
+limite    := 220
+cString   := "SD2"
+aOrd      := {} //-- Ordem
+lContinua := .T.
+cUM       := ""
+lEnd      := .F.
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",1 }
+nomeprog  := "FATR01"
+nLastKey  := 0
+cPerg     := "FATR01"
+xGerVo    := 0
+xGerVp    := 0
+xGerSa    := 0
+_cFlag    :=.t.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+pergunte("FATR01",.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01             // Do Produto                          ³
+//³ mv_par02             // Ate o Produto                       ³
+//³ mv_par03             // A Partir da Data                    ³
+//³ mv_par04             // Ate a Data                          ³
+//³ mv_par05             // TES                                 ³
+//³ mv_par06             // Descricao Produto                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel  := "FATR01"
+wnrel  := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,,)
+
+If nLastKey==27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt  := Space(10)
+cbcont := 00
+li     := 80
+m_pag  := 01
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Definicao dos cabecalhos                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+titulo := "Resumo de Vendas. Entre: "+dtoc(mv_par03)+" a "+dtoc(mv_par04)
+cabec1 := "Produto         Descricao                           UM   Quant Prc.Unitar   Val.Mercad    Val.IPI    Val.Total Tipo Venda                    D e v o l u c o e s                  L i q u i d o"
+cabec2 := "                                                                                                                                    N.Fisc Emissao         Quant      Valor        Quant        Valor"
+//         999999999999999 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx XX 999.999 999,999,99 9,999,999,99 999,999,99 9,999,999,99 xxxxxxxxxxxxxxxxxxx  999999 99/99/9999 999,999,99 999,999,99 9,999,999,99 9,999,999,99
+//         01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+//                   111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999
+
+If nLastKey == 27
+   Return
+Endif
+
+nTipo  := IIF(aReturn[4]==1,15,18)
+
+cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+
+ #IFDEF WINDOWS
+      RptStatus({|| RptDetail()})// Substituido pelo assistente de conversao do AP5 IDE em 08/03/02 ==>       RptStatus({|| Execute(RptDetail)})
+      Return
+// Substituido pelo assistente de conversao do AP5 IDE em 08/03/02 ==>       Function RptDetail
+Static Function RptDetail()
+ #ENDIF
+
+ //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+ //³ Inicio do Processamento da Nota Fiscal                       ³
+ //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ cbtxt  := Space(10)
+ cbcont := 00  
+ 
+ dbSelectArea("SD1")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond := 'D1_Filial + D1_NfOri + D1_SeriOri + D1_ItemOri'
+ IndRegua('SD1',cArqNtx,cIndCond,,,'Selecionando: Itens N.Fiscal Entrada...') 
+
+ dbSelectArea("SD2")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond := 'D2_Filial + D2_Cod + Str(D2_PrcVen,12,2)'
+ IndRegua('SD2',cArqNtx,cIndCond,,,'Selecionando: Itens N.Fiscal de Venda...') 
+
+ dbSeek(xFilial("SD2")+mv_par01,.T.)
+ SetRegua(Reccount())
+
+ xGerQtd := 0
+ xGerVal := 0
+ xGerIpi := 0
+ 
+ xGQtd := 0
+ xGVal := 0
+
+ While !Eof() .And. d2_cod <= mv_par02  .And. xFilial() == SD2->D2_FILIAL .And. lContinua
+
+       #IFNDEF WINDOWS
+                    If LastKey() == 286
+                       lEnd := .t.
+                    End
+       #ENDIF
+
+       If lEnd
+                    @PROW()+1,001 PSAY "CANCELADO PELO OPERADOR"
+                    lContinua := .F.
+                    Exit
+       Endif
+
+       if d2_emissao < mv_par03 .or. d2_emissao > mv_par04
+                dbSkip()
+                Loop
+       End
+
+       If !EMPTY(mv_par05) .AND. !(D2_CF $ AllTrim(mv_par05))
+          dbSkip()
+          Loop
+       End
+
+       dbSelectArea("SF4")
+       dbSetOrder(1)
+       dbSeek(xFilial("SF4")+SD2->D2_TES)
+
+       dbSelectArea("SF2")
+       dbSetOrder(1)
+       dbSeek(xFilial("SF2")+SD2->D2_DOC+SD2->D2_SERIE)
+
+       dbSelectArea("SB1")
+       dbSetOrder(1)
+       dbSeek(xFilial("SB1")+SD2->D2_COD)
+
+       dbSelectArea("SD2")
+
+       If !EMPTY(mv_par06) .And. !(AllTrim(mv_par06) $ SB1->B1_Desc)
+                dbSkip()
+                Loop
+       End
+
+       If SF4->F4_DUPLIC == "N"
+               dbSkip()
+               Loop
+       End
+
+       xCodigo := D2_COD
+       xPrcVen := D2_PrcVen
+       xTotQtd := 0
+       xTotVal := 0
+       xTotIpi := 0
+       xDevolv := {}
+       While !Eof() .And. SD2->D2_COD == xCodigo .And. xPrcVen == D2_PrcVen .AND. xFilial() == SD2->D2_FILIAL
+
+             IncRegua()
+
+             If d2_emissao < mv_par03 .or. d2_emissao > mv_par04
+                dbSkip()
+                Loop
+             End
+
+             If !EMPTY(mv_par05) .AND. !(D2_CF $ AllTrim(mv_par05))
+                dbSkip()
+                Loop
+             End
+            
+             If !EMPTY(mv_par06) .And. !(AllTrim(mv_par06) $ SB1->B1_Desc)
+                dbSkip()
+                Loop
+             End
+
+             dbSelectArea("SF4")
+             dbSetOrder(1)
+             dbSeek(xFilial("SF4")+SD2->D2_TES)
+
+             dbSelectArea("SD2")
+
+             If SF4->F4_DUPLIC == "N"
+                dbSkip()
+                Loop
+             End
+              
+             xTotQtd := xTotQtd + (SD2->D2_Quant)
+             xTotVal := xTotVal + (SD2->D2_Total+SF2->F2_DESPESA)
+             xTotIpi := xTotIpi + SD2->D2_ValIpi 
+              
+             If SD2->D2_QTDEDEV > 0
+                dbSelectArea("SD1")
+                dbSeek(xFilial("SD1")+SD2->D2_DOC+SD2->D2_SERIE+SD2->D2_ITEM)
+                If D1_TES == "133"
+                   AADD( xDevolv, {D1_DOC,D1_EMISSAO,SD2->D2_QTDEDEV,SD2->D2_VALDEV} )
+                   xGQtd := xGQtd + SD2->D2_QTDEDEV
+                   xGVal := xGVal + SD2->D2_VALDEV
+                END   
+                dbSelectArea("SD2")
+             End   
+
+             dbSkip()
+       EndDo
+
+       @ li,000      PSAY SB1->B1_COD
+       @ li,PCOL()+1 PSAY Subs(SB1->B1_DESC,1,35)
+       @ li,PCOL()+1 PSAY SB1->B1_UM
+       @ li,PCOL()+1 PSAY Transfor(xTotQtd,"@E 999,999")
+       @ li,PCOL()+1 PSAY Transfor(xPrcVen,"@E 999,999.99")
+       @ li,PCOL()+1 PSAY Transfor(xTotVal,"@E 9,999,999.99")
+       @ li,PCOL()+1 PSAY Transfor(xTotIpi,"@E 999,999.99")
+       @ li,PCOL()+1 PSAY Transfor(xTotVal+xTotIpi,"@E 9,999,999.99")
+       @ li,PCOL()+1 PSAY Subs(SF4->F4_Texto,1,20)
+
+       xGerQtd := xGerQtd + xTotQtd
+       xGerVal := xGerVal + xTotVal
+       xGerIpi := xGerIpi + xTotIpi
+                        
+       xTQtd := 0
+       xTVal := 0
+       For xI:=1 to Len(xDevolv)
+           @ li,132      PSAY xDevolv[xI][1] 
+           @ li,PCOL()+1 PSAY xDevolv[xI][2]
+           @ li,PCOL()+1 PSAY Transfor(xDevolv[xI][3] ,"@E 999,999.99") 
+           @ li,PCOL()+1 PSAY Transfor(xDevolv[xI][4] ,"@E 999,999.99")
+           xTQtd := xTQtd + xDevolv[xI][3]
+           xTVal := xTVal + xDevolv[xI][4]
+           li := li + 1
+       Next
+              
+       If Len(xDevolv)==0
+           li := li + 1
+           
+       Else
+           @ li,132      PSAY "---------------------------------------------------------"
+           li := li + 1
+           @ li,132      PSAY "Sub.Total        "
+           @ li,PCOL()+1 PSAY Transfor(xTQtd ,"@E 999,999") 
+           @ li,PCOL()+1 PSAY Transfor(xTVal ,"@E 999,999.99") 
+           @ li,PCOL()+1 PSAY Transfor(xTotQtd-xTQtd ,"@E 999,999") 
+           @ li,PCOL()+1 PSAY Transfor(xTotVal-xTVal ,"@E 9,999,999.99")
+           li := li + 1
+       End
+                    
+       If li > 55
+          cabec(titulo,cabec1,cabec2,nomeprog,tamanho,18)
+       End
+ Enddo
+
+ li := li + 1
+ @ li,000 PSAY "TOTAL"
+ @ li,057      PSAY Transform(xGerQtd,"@E 999,999")
+ @ li,074      PSAY Transform(xGerVal,"@E 9,999,999.99")
+ @ li,PCOL()+1 PSAY Transform(xGerIpi,"@E 999,999.99")
+ @ li,PCOL()+1 PSAY Transform(xGerVal+xGerIpi,"@E 9,999,999.99")
+ @ li,150      PSAY Transfor(xGQtd , "@E 999,999") 
+ @ li,PCOL()+1 PSAY Transfor(xGVal , "@E 999,999.99")
+ @ li,PCOL()+1 PSAY Transfor(xGerQtd-xGQtd ,"@E 999,999") 
+ @ li,PCOL()+1 PSAY Transfor(xGerVal-xGVal ,"@E 9,999,999.99")
+
+ IF li != 80
+       roda(cbcont,cbtxt,tamanho)
+ EndIF
+
+ Set Device To Screen
+
+ dbSelectArea('SD2')
+ RetIndex('SD2')
+
+ If !(Type('ArqNtx') == 'U')
+    fErase(cArqNtx)
+ Endif
+
+ If aReturn[5] == 1
+    Set Printer to
+    dbCommitAll()
+    ourspool(wnrel)
+ Endif
+ MS_FLUSH()      
+ Return
+
