@@ -1,0 +1,384 @@
+#include "rwmake.ch"
+
+User Function Gqreentr()
+
+SetPrvt("CALIAS,CRECNO,XDOC,XSERIE,XFORNEC,XLOJA")
+SetPrvt("XVENCISS,XVENCIRF,XNATUREZ,XI,") 
+SetPrvt("XBASES,XVALCOF,XVALPIS,TBASES,TVALCOF,TVALPIS")
+
+calias   := alias()
+crecno   := recno()
+
+xDoc     := SF1->F1_DOC
+xSerie   := SF1->F1_SERIE
+xFornec  := SF1->F1_FORNECE
+xLoja    := SF1->F1_LOJA
+xEspecie := SF1->F1_ESPECIE
+cBaseIcm := SF1->F1_BASEICM
+xVencImp := ctod("  /  /  ")
+//xVencIrf := ctod("  /  /  ")
+xTipo    := SF1->F1_TIPO
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualização dos campos de taxa original e invoices do SE2    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+xTpFrete := ""
+tTotII   := 0
+tBases   := 0
+tBasImp6 := 0
+tBasImp5 := 0
+_cInvs   := ""
+
+if xTipo == "N"
+   U_WFE06() // informa a entrada de Novos Produtos...  Jefferson
+Endif
+
+
+IF AllTrim(SF1->F1_Formul) == "S" // Jorge Em: 30/07/2007
+   cValPis  := 0.00
+   cValCof  := 0.00
+   cMenNota := Space(200)
+	
+   @ 96,42 TO 323,505 DIALOG oDlg6 TITLE "Valores Complementares da N.Fiscal"
+   @ 08,10 TO 84,222
+   @ 15,014 SAY "Mensagem da Nota"
+   IF SM0->M0_CODIGO == "04"
+      @ 30,014 SAY "Valor do PIS     "
+      @ 45,014 SAY "Valor do COFINS  "
+   End   
+   @ 15,070 Get cMenNota PICTURE "@S80"  // VALID cMenNota<>Space(200)
+   IF SM0->M0_CODIGO == "04"
+      @ 30,070 Get cValPis  PICTURE "@E 999,999,999.99"
+      @ 45,070 Get cValCof  PICTURE "@E 999,999,999.99"
+   End   
+   @ 91,168 BMPBUTTON TYPE 1 ACTION _okPrc()
+   @ 91,196 BMPBUTTON TYPE 2 ACTION _okPrc()
+	
+   ACTIVATE DIALOG oDlg6 CENTERED  
+   
+//   AjusFina()      // Incluido por Jefferson 05.06.08
+   
+//   Return Nil
+
+End           
+/**********************************************************/
+//Customização para complementar a nota de entrada de importação
+If AllTrim(SF1->F1_Formul) == "S" //.AND. SF1->F1_TIPO<>'C'
+	SA2Est:=Posicione("SA2",1,xFilial("SA2")+xFornec+xLoja,"A2_EST")
+	If Alltrim(SA2Est)="EX" .and. Alltrim(xEspecie)='SPED'		
+		C_NotaImp()  		
+    EndIf		
+EndIf 
+  // -- ATENDER BASE DE CALCULO DE IMPORTACAO MESMO VALOR CONTABIL -- // IVAN PENA 15/09/15       
+if SF1->F1_EST ="EX" 
+	SF3->F3_OUTRICM = SF3->F3_VALCONT
+Endif
+
+/***********************************************************/
+AjusFina() 
+Return Nil 
+/**************************************************************/
+/***Função que complementa a Nota Fiscal de Importação***/
+
+Static Function C_NotaImp() 
+
+DbSelectArea("SZB")
+DbSetOrder(4)
+DbSelectArea("SD1")
+DbSetOrder(1)      
+DbSeek(xFilial("SD1")+xDoc+xSerie+xFornec+xLoja)
+While !Eof() .and. SD1->D1_FILIAL+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA==xFilial("SD1")+xDoc+xSerie+xFornec+xLoja 
+	//Inclui os complementos de nota fiscal
+    NrLi:=""                
+    NrDI:=""
+    DtRegDi:=SToD(" /  / ")
+    DtDes  :=SToD(" /  / ")
+    DtBl   :=SToD(" /  / ")
+    
+//    ZB_DATDESE	varchar	no	8	     	     	no	no	no	Latin1_General_BIN
+    If SD1->D1_TIPO<>'C' 
+	   	DbSelectArea("SZB")    
+	    DbSetOrder(3)
+	    If DbSeek(xFilial("SZB")+SD1->D1_DI+SD1->D1_INVOICE+SD1->D1_PEDIDO)     
+		   	NrDi:=SZB->ZB_DI
+	    	DtRegDi:=SZB->ZB_DATADI
+	    	DtDes:=SZB->ZB_DATDESE
+	    	DtBl:=SZB->ZB_DATABL 
+	    Endif  
+	Else
+	   	NrDi:=SD1->D1_DI
+	   	DtRegDi:=SD1->D1_DATADI
+	   	DtDes:=SD1->D1_DATADES
+	   	DtBl:=SD1->D1_BL 
+    EndIf               
+    NrLi:=SD1->D1_LI
+    If Empty(SD1->D1_DATADES)
+	    RecLock("SD1",.F.)
+	    SD1->D1_DATADES:=DtDes 
+	    MsUnlock()     
+    EndIf
+/* Márcio Macedo 16/04/13 - Comentado pois o sistem a ja gera automatico o movimento no SD5.*/                               
+/*	RecLock("CD5",.T.)
+    CD5->CD5_FILIAL:=xFilial("SD1")
+    CD5->CD5_NDI:=NRDI
+    CD5->CD5_DOCIMP:=NRLI
+    CD5->CD5_DTDI :=DtRegDI
+    CD5->CD5_DTDES:=DtDes            
+    CD5->CD5_FILIAL :=xFilial("CD5")	
+	CD5->CD5_DOC    :=SD1->D1_DOC
+	CD5->CD5_SERIE  :=SD1->D1_SERIE
+	CD5->CD5_ESPEC:=xEspecie
+	CD5->CD5_FORNEC :=SD1->D1_FORNECE
+	CD5->CD5_LOJA   :=SD1->D1_LOJA
+	CD5->CD5_TPIMP  :='0'
+	CD5->CD5_LOCAL  :='0'
+	CD5->CD5_LOCDES :='MANAUS'
+	CD5->CD5_UFDES  :='AM'
+	CD5->CD5_CODEXP :=SD1->D1_FORNECE
+	CD5->CD5_NADIC  :=SD1->D1_ADICAO
+	CD5->CD5_SQADIC :=SD1->D1_SEQADIC
+	CD5->CD5_ITEM   :=SD1->D1_ITEM 
+	CD5->CD5_CODFAB :=SD1->D1_FABRIC
+	MsUnlock() 
+*/
+    DbSelecTArea("SD1")
+    DbSkip()
+
+EndDo             
+//Bloco serve para ajustar a data de vencimento conforme a data da BL xDoc+xSerie+xFornec+xLoja
+If !Empty(DtBl) 
+	DbSelectArea("SE2")
+	DbSetOrder(6)
+	if dbSeek(xFilial("SE2")+xfornec+xloja+xSerie+xDoc)  
+		Chave:= xFilial("SE2")+xfornec+xloja+xSerie+xDoc
+		While !Eof() 
+			if Chave == SE2->E2_FILIAL+SE2->E2_FORNECE+SE2->E2_LOJA+SE2->E2_PREFIXO+SE2->E2_NUM
+	            DifDias:=SE2->E2_VENCTO-SE2->E2_EMISSAO
+	            RecLock("SE2",.F.)
+	    	    SE2->E2_VENCTO:= DtBl+DifDias
+   	    	    SE2->E2_VENCREA:= DtBl+DifDias 
+   	    	    SE2->E2_VENCORI:= DtBl+DifDias   
+	        	MsUnLock() 
+	        Else
+	           Exit
+	        EndIf
+	        DbSelectArea("SE2")
+	        DbSkip()
+		EnDDo 
+	EndIf 
+EndIf
+	/*
+xDoc     := SF1->F1_DOC
+xSerie   := SF1->F1_SERIE
+xFornec  := SF1->F1_FORNECE
+xLoja    := SF1->F1_LOJA
+
+*/
+	
+Return 
+
+*************************
+Static Function _okPrc()
+**************************
+
+Close(oDlg6)
+
+dbSelectArea("SD1")
+dbSetOrder(1)
+dbSeek(xFilial("SD1")+SF1->F1_Doc+SF1->F1_Serie+SF1->F1_Fornece+SF1->F1_Loja)
+_cInvs   := AllTrim(D1_INVOICE)
+
+While !Eof() .And. D1_Doc==SF1->F1_Doc .And. D1_Serie==SF1->F1_Serie .And. D1_Fornece==SF1->F1_Fornece .And. D1_Loja==SF1->F1_Loja
+          
+         dbSelectArea("SB1")
+         dbSetOrder(1)
+         dbSeek(xFilial("SB1")+SD1->D1_Cod)
+      
+         cTxII  := Iif(SM0->M0_CODIGO=="04",B1_TXII/100,0)
+         cTxIPI := SD1->D1_IPI / 100
+
+//         RecLock("SB1",.F.)
+//	     SB1->B1_PRV1 := SD1->D1_CUSTO
+//	     MsUnlock()
+
+         dbSelectArea("SD1")
+	     If !(AllTrim(D1_INVOICE) $ _cInvs)
+	        _cInvs += "/"+AllTrim(D1_INVOICE)
+	     End
+	
+        dbSkip()
+	
+EndDo                                                                                                         
+
+
+dbSelectArea("SF1")
+RecLock("SF1",.F.)
+SF1->F1_MENNOTA := cMenNota
+MsUnlock()
+
+Return
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Função que ajusta os títulos no financeiro.              ³
+//³Campos Ajustados: E2_INVOICE E E2_VENCTO para os títulos ³
+//³de impostos                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+Static Function AjusFina 
+              
+
+ 
+dbSelectArea("SE2")
+dbSetOrder(6)
+dbSeek(xFilial("SE2")+xfornec+xloja+xSerie+xDoc)
+//Preenche os Dados da Invoice para os Títulos Principais
+xTpTit:=E2_TIPO                               
+xParc :=E2_PARCELA
+RelParc:={}
+While !Eof() .And. xfornec+xloja+xSerie+xDoc == E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM
+	If E2_Moeda # 1
+	   RecLock("SE2",.F.)
+	   SE2->E2_TXORIG  := SF1->F1_TXMOEDA
+	   SE2->E2_INVOICE := _cInvs 
+	   MsUnlock()
+	End   
+    aadd(RelParc,SE2->E2_PARCELA)
+	DbSelectArea("SE2")
+    DbSkip()
+EndDo 
+       
+//Para os Titulo de Imposto
+ xSerie:=U_GeraEsp(xSerie,3)
+ xDoc  :=U_GeraEsp(xDoc,9)        
+ xTpTit:=U_GeraEsp(xTpTit,3)
+ xFornec:=U_GeraEsp(xFornec,6)
+ xLoja :=U_GeraEsp(xLoja,2)
+
+ 
+ //Rotina para montar o campo TITPAI apartir dos títulos principais
+ ChTitPai:={}
+ For i:=1 to len(RelParc) 
+		AAdd(ChTitPai,xSerie+xDoc+RelParc[i]+xTpTit+xFornec+xLoja)
+//                                cPrefixo+cNumero+cParcela+cTipo+cFornece+cLoja
+ Next 
+
+ dbSelectArea("SE2")
+ cArqSE2 := CriaTrab(NIL,.F. )                
+ cKeySE2 := "E2_Filial+E2_TITPAI"
+ cFilSE2 := ""
+ IndRegua("SE2",cArqSE2,cKeySE2,,cFilSE2,"Selecionando Registros...")
+
+ ProcRegua(RecCount())
+ dbGoTop() 
+
+ For i:=1 to len(ChTitPai)
+ 
+//	 DbSeek(xFilial("SE2")+xSerie+xDoc+xTpTit+xFornec+xLoja)
+	 DbSeek(xFilial("SE2")+ChTitPai[i])
+	
+	 While !Eof() .And. Alltrim(SE2->E2_TITPAI) ==Alltrim(ChTitPai[i]) //xSerie+xDoc+xTpTit+xFornec+xLoja
+		 
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ajustar datas de vecimentos para titulos do ISS.             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+		If AllTrim(SE2->E2_Naturez) == "ISS"
+	        If month(SE2->E2_Emissao) #12 
+			   xVencImp := ctod("10/"+StrZero(month(SE2->E2_Emissao)+1,2)+"/"+right(dtoc(SE2->E2_Emissao),2))
+			Else  
+			   Ano:=Val(right(dtoc(SE2->E2_Emissao),2))+1
+		   	   xVencImp := ctod("10/"+"01"+"/"+Str(Ano))
+		    EndIf
+	        xVencImp:=DatVencto(xVencImp) 
+		EndIf   	
+		
+		If AllTrim(SE2->E2_Naturez) == "IRF"
+	        If month(SE2->E2_Emissao) #12 
+			   xVencImp := ctod("20/"+StrZero(month(SE2->E2_Emissao)+1,2)+"/"+right(dtoc(SE2->E2_Emissao),2))
+			Else  
+			   Ano:=Val(right(dtoc(SE2->E2_Emissao),2))+1
+		   	   xVencImp := ctod("20/"+"01"+"/"+Str(Ano))
+		    EndIf
+	        xVencImp:=DatVencto(xVencImp) 
+		EndIf   	
+		If AllTrim(SE2->E2_Naturez) == "IRF" .or. AllTrim(SE2->E2_Naturez) == "ISS"
+		   RecLock("SE2",.F.)
+		   SE2->E2_VENCTO  := xVencImp
+		   SE2->E2_VENCREA := xVencImp
+		   MsUnlock()
+		EndIf
+        DbSelectArea("SE2")
+		dbSkip()
+	Enddo 
+ Next
+
+
+
+
+dbSelectArea(cAlias)
+dbGoto(cRecno)
+
+Return()    
+//*************************************************************************************//
+User Function GeraEsp(xDado,Tam)
+ xDado:=Alltrim(xDado)+Replicate(" ",Tam-Len(Alltrim(xDado)))        
+Return xDado 
+
+//*************************************************************************************//
+//*************************************************************************************//
+//Função que retorna a data da Bl do pedido de compra  ********************************//
+//*************************************************************************************//
+//*************************************************************************************//
+
+//*************************************************************************************//
+/* Funcao desenvolvida por Michel em 22/04/08, para forcar atualizacao do CB0 quando produto possuir movimentacao com LOCAL/LOCALIZ diferente do SD1/SBF */
+Static Function fAtuCB0(_cDoc,_cSerie,_cFornec,_cLoja)
+
+Local lRet		:= .t.
+Local cQuery	:= ""
+Local _cLocal	:= Substr(GetMV("MV_DISTAUT"),1,2)
+Local _cLocali	:= Substr(GetMV("MV_DISTAUT"),3,15)
+
+cQuery  :=	"UPDATE " + RETSQLNAME("CB0") + " SET  CB0_LOCAL = '" + _cLocal +   "'  ,  CB0_LOCALI = '" + _cLocali + "'   "
+cQuery  +=  "WHERE CB0_NFENT = '" + _cDoc + "' AND CB0_SERIEE = '" + _cSerie + "' AND CB0_FORNEC = '" + _cFornec + "' AND CB0_LOJAFO = '" + _cLoja + "'  AND "
+cQuery  +=  "D_E_L_E_T_ = ' ' AND CB0_FILIAL = '" + XFILIAL("CB0") +  "'  "
+
+TcSqlExec(cQuery)
+TcSqlExec("Commit")
+
+Return(lRet)                   
+
+
+
+//****************************************************************/
+//****************************************************************/
+
+Static Function DatVencto(DatVencto) 
+
+AuxD:=DatVencto
+If (DOW(AuxD)= 7)
+ 	AuxD:=AuxD-1
+Elseif (DOW(AuxD)= 1)
+	AuxD:=AuxD-2
+EndIf
+Ano:=Substr(Dtos(AuxD),1,4)
+Mes:=Substr(Dtos(AuxD),5,2)
+
+DbSelectArea("RCG")
+DbSetOrder(1)
+if DbSeek(xFilial("RCG")+Ano+Mes)
+	While !Eof()
+           //For sábado ou domingo            ou se O dia for feriado//////      
+		If  (RCG->RCG_DIAMES=AuxD .and. RCG->RCG_TIPDIA $ '4')     //Sabado ou Domingo 
+			AuxD:=AuxD-1
+			Exit
+		EndIf 
+		DbSelectArea("RCG")
+		DbSkip()
+	EndDo
+EndIf
+Return AuxD
+//********************************************************************************/

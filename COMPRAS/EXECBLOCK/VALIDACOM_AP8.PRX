@@ -1,0 +1,72 @@
+#include "rwmake.ch"
+#include "TOPCONN.CH"
+
+/*/
++------------------------------------------------------------------------+
+| PROGRAMA  | VALIDACOM | REMERSON MOGI                | DATA | 23/11/06 |
++------------------------------------------------------------------------+
+| DESCRICAO | Validações do modulo de compras                            |
++------------------------------------------------------------------------+
+| ALTERACAO | 08/01/08  - Jefferson Moreira                              |
++------------------------------------------------------------------------+
+| ALTERACAO | 28/03/17  - Wagner Corrêa (Banir campos fixos)             |
++------------------------------------------------------------------------+
+/*/
+
+User Function validDataPC()
+
+Local lPode    := .T.
+Local cArea    := GetArea()
+Local cFor     := M->CA120FORN
+Local cTransp  := Posicione("SA2", 1, xFilial("SA2") + cFor   , "A2_TRANSP")
+Local cVia     := Posicione("SA4", 1, xFilial("SA4") + cTransp, "A4_VIA") 
+Local dDataHj  := dDataBase
+
+Local dDataEm  := NIL
+Local dDataCh  := NIL
+Local dDataNSB := NIL
+Local cProduto := NIL                             
+
+
+
+_nPosProd := aScan(aHeader, {|x| Alltrim(x[2]) == "C7_PRODUTO"} )
+_nPosTran := aScan(aHeader, {|x| Alltrim(x[2]) == "C7_TRANSP" } )
+
+_nPosEmbar := aScan(aHeader, {|x| Alltrim(x[2]) == "C7_DTEMBAR"} )
+_nPosChega := aScan(aHeader, {|x| Alltrim(x[2]) == "C7_DTCHEGA"} )
+
+dDataEm        := C7_DTEMBAR
+
+If !Empty(dDataEm)
+
+   lPode    := .T.  
+   dDataCh  := dDataEm  
+   dDataNSB := dDataEm
+   
+   aCols[ n, _nPosTran] := cTransp
+   cGrupoPro := Posicione("SB1", 1, xFilial("SB1") + aCols[ n, _nPosProd], "B1_GRUPO") 
+   
+   If SubStr(cGrupoPro,1,3) == "MPN"
+      Do Case
+         Case cVia = "AEREO"
+              dDataCh  := dDataEm + 2
+              dDataNSB := dDataCh + 1         
+         Case cVia = "RODOVIARIO"
+              dDataCh  := dDataEm + 15
+              dDataNSB := dDataCh + 2  
+         Case cVia = "MARITIMO" 
+              dDataCh  := dDataEm
+              dDataNSB := dDataCh + 2  
+         Case cVia = "O PROPRIO"           
+              dDataCh  := dDataEm
+              dDataNSB := dDataCh + 2 
+      EndCase
+   End                             
+
+   aCols[ n, _nPosEmbar] := dDataCh
+   aCols[ n, _nPosChega] := dDataNSB
+
+End
+       
+RestArea(cArea)
+Return(lPode)
