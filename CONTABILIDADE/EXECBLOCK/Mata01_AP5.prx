@@ -1,0 +1,170 @@
+#include "rwmake.ch"  
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ Mata01   ³ Autor ³ Remerson Mogi         ³ Data ³19/03/2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Locacao   ³ NIPPON SEIKI     ³Contato ³ rmogi@nippon-seikibr.com.br    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Aplicacao ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Analista Resp.³  Data  ³ Bops ³ Manutencao Efetuada                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Rmogi         ³23/05/07³      ³Cadastrar o CC 241 na validação         ³±±
+±±³              ³  /  /  ³      ³                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function Mata01() 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("XALIAS,CRECNO,XCONTA,")
+
+// MATA01.PRX -> EXECBLOCK PARA GERACAO AUTOMATICA DAS CONTAS DE DESPESAS.
+
+xAlias := Alias()
+cRecno := Recno()
+xConta := "" 
+
+if IsTelnet()
+
+Else
+Do Case
+     Case AllTrim(m->cCC) == "211"  // M O N T A G E M
+          If AllTrim(SB1->B1_GRUPO)     == "MPI"  // MPN - Mat. Prima Importado
+             xConta := "32111001"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MPN"  // MPN - Mat. Prima Nacional
+             xConta := "32111002"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSI"  // MSI - Mat. secundario importado.
+             xConta := "32111003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSN"  // MSN - Mat. secundario nacional.
+             xConta := "32111004"
+          End
+     
+     Case AllTrim(m->cCC) == "221"  // I  M  P  R  E  S  S  Ã  O
+          If AllTrim(SB1->B1_GRUPO)     == "MPI"  // MPN - Mat. Prima Importado
+             xConta := "32112001"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MPN"  // MPN - Mat. Prima Nacional
+             xConta := "32112002"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSI"  // MSI - Mat. secundario importado.
+             xConta := "32112003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSN"  // MSN - Mat. secundario nacional.
+             xConta := "32112004"
+          End
+     
+     Case AllTrim(m->cCC) == "231"  // I N J E Ç Ã O
+          If     AllTrim(SB1->B1_GRUPO) == "MPI"  // MPN - Mat. Prima Importado
+             xConta := "32114001"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MPN"  // MPN - Mat. Prima Nacional
+             xConta := "32114002"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSI"  // MSI - Mat. secundario importado.
+             xConta := "32114003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSN"  // MSN - Mat. secundario nacional.
+             xConta := "32114004"
+          END
+
+     Case AllTrim(m->cCC) == "241"  // I N S E R C A O   A U T O M A T I C A
+          If AllTrim(SB1->B1_GRUPO)     == "MPI"  // MPN - Mat. Prima Importado
+             xConta := "15111003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MPN"  // MPN - Mat. Prima Nacional
+             xConta := "15111003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSI"  // MSI - Mat. secundario importado.
+             xConta := "15111003"
+          ElseIf AllTrim(SB1->B1_GRUPO) == "MSN"  // MSN - Mat. secundario nacional.
+             xConta := "15111003"
+          End          
+          
+     OTHERWISE
+          If cTM == "600"
+              MSGSTOP("O Centro de Custo ["+AllTrim(cCC)+"] não é um Centro de Trabalho. POR FAVOR CORRIGIR CC Centro de Custo.")
+          End
+EndCase
+Endif
+Return(xConta)
+//
+//
+
+User Function Mata01a()
+Local lRet   := .T.
+Local c_nPrg := FunName()
+
+//If c_nPrg == "MATA241" .and. xFilial("SB1")="01"
+  If xFilial("SD3")=="01"
+	If c_nPrg == "MATA241"   
+	    If cTM == "600" .And. AllTrim(SB1->B1_Tipo) == "PA" .And. AllTrim(SB1->B1_ASTEC) <> "S"
+			MSGSTOP("Tipo de Movimetação [600] para PA só pode ser feita em ASTEC. Caso contrário utilizar Tipo de Movimentação [610]. POR FAVOR CORRIGIR TM - TIPO DE MOVIMENTO.")
+			lRet:=.F.
+		Elseif cTM == "600" .And. !(AllTrim(SB1->B1_Tipo) $ "PA/MP/PI/RT/BN") 
+			MSGSTOP("Tipo de Movimetação [600] é somente para MP,PI ou PA(ASTEC). Requisição de Materiais Improdutivos, usar Tipo de Movimentação [610]. POR FAVOR CORRIGIR TM - TIPO DE MOVIMENTO.")
+			lRet:=.F.
+		ElseIf cTM == "610" .And. (AllTrim(SB1->B1_Tipo) $ "MP/PI/RT/BN")
+			MSGSTOP("Tipos de Materiais iguais a MP ou PI, devem usuar Tipo de Movimetação [600].") 
+		ElseIf cTM == "630" .And. !(AllTrim(SB1->B1_Tipo) $ "MC")
+			MSGSTOP("Tipo de Movimetação [630] deve movimentar somente materiais do tipo [MC].") 
+		End
+	EndIf
+ EndIF	
+Return(lRet)
+//
+//
+// FUNÇÃO: VERIFICA A QUANTIDADE DOS MOVIMENTOS 600 E 300
+// AUTOR: JEFFERSON MOREIRA 
+// DATA: 09/05/2006
+
+
+User Function Mata01b()
+Local lRet   := .T.
+Local c_nPrg := FunName()
+
+If c_nPrg == "MATA241"
+	If cTM == "600" .And. (AllTrim(SB1->B1_UM) $ "PC/UN/TB/CJ/PI") .OR. cTM == "300" .And. (AllTrim(SB1->B1_UM) $ "PC/UN/TB/CJ/PI")
+	    IF INT(D3_QUANT) - D3_QUANT # 0
+		   MSGSTOP("SÓ SÃO PERMITIDAS MOVIMENTAÇÕES DE QUANTIDADES INTEIRAS PARA ESSA UNIDADE DE MEDIDA")
+		   lRet:=.F.
+		ENDIF
+	End
+EndIf
+Return(lRet)  
+
+
+
+User Function Mata01c()
+Local lRet   := .F.
+
+xAlias := Alias()
+cRecno := Recno()
+xCC       := AllTrim(m->C2_CC)
+xRecurso := AllTrim(m->C2_RECURSO)
+
+dbSelectArea("SH1")
+dbSetOrder(1)
+if dbSeek(xFilial("SH1") + xRecurso )
+
+	If SH1->H1_CCusto # xCC
+   		msgstop("Recurso informado nao pertence ao C.de Custo da OP.")
+	ElseIf Alltrim(SH1->H1_CODIGO)==xRecurso
+   		lRet   := .T.
+   	End   
+Else
+	msgstop("Recurso não cadastrado. ")
+EndIF
+
+ 
+
+dbSelectArea(xAlias)
+dbGoto(cRecno)
+Return(lRet)
