@@ -1,0 +1,302 @@
+#include "rwmake.ch" 
+#IFNDEF WINDOWS
+#DEFINE PSAY SAY
+#ENDIF
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±³Fun‡…o    ³ ATFR01   ³ Autor ³ Jorge Silveira        ³ Data ³ 20.04.06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relação de Bens, com seus respectivos valores residuais.   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+/*/{Protheus.doc} ATFR01
+//TODO Relação de Bens com valores residuais
+@author Wagner Corrêa
+@since 20/03/2017
+@version 1.0
+
+@type function
+/*/
+User Function ATFR01()
+
+	SetPrvt("CBTXT,CBCONT,CABEC1,CABEC2,WNREL,TITULO")
+	SetPrvt("CDESC1,CDESC2,CDESC3,TAMANHO,LIMITE,CSTRING")
+	SetPrvt("AORD,LCONTINUA,CUM,LEND,ARETURN,NOMEPROG")
+	SetPrvt("NLASTKEY,CPERG,XGERVO,XGERVP,XGERSA,_CFLAG")
+	SetPrvt("LI,M_PAG,NTIPO,XITEM,XVALOR,XNUMBOR")
+
+
+	titulo    := PADC("Relação de Bens.",74)
+	cDesc1    := PADC("Este programa tem como objetivo, imprimir a Relação de Bens",74)
+	cDesc2    := PADC("adquiridos pela Empresa, com seus respectivos valores, conforme",74)
+	cDesc3    := PADC("Parametros especificado pelo usuário.",74)
+	tamanho   := "G"
+	limite    := 180
+	cString   := "SN3"
+	aOrd      := {} //-- Ordem
+	lContinua := .T.
+	cUM       := ""
+	lEnd      := .F.
+	aReturn   := { "Zebrado", 1,"Administracao", 2, 2, 1, "",1 }
+	nomeprog  := "ATFR01"
+	nLastKey  := 0
+	cPerg     := "ATFR01"
+	xGerVo    := 0
+	xGerVp    := 0
+	xGerSa    := 0
+	_cFlag    :=.t.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica as perguntas selecionadas                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	pergunte(cPerg, .F.)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis utilizadas para parametros                        ³
+	//³ mv_par01             // Da Conta                            ³
+	//³ mv_par02             // Ate a Conta                         ³ 
+	//³ mv_par03             // Do C.de Custo                       ³ 
+	//³ mv_par04             // Até C.de Custo                      ³ 
+	//³ mv_par05             // Tipo (Analitico/Sintetico/Resumo)   ³ 
+	//³ mv_par06             // Data Referencia                     ³ 
+	//³ mv_par07             // Quanto as baixas                    ³ 
+	//³ mv_par08             // Do Bem                              ³
+	//³ mv_par09             // Ate a Bem                           ³ 
+	//³ mv_par10             // Da Aquisição                        ³
+	//³ mv_par11             // Ate a Aquisição                     ³ 
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Envia controle para a funcao SETPRINT                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	wnrel  := "ATFR01"
+
+	wnrel  := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd)
+
+	If nLastKey==27
+		Return
+	Endif
+
+	SetDefault(aReturn,cString)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cbtxt  := Space(10)
+	cbcont := 00
+	li     := 80
+	m_pag  := 01
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Definicao dos cabecalhos                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	titulo := Iif(Mv_par05<>3,"RELACAO DE BENS.(POR CONTA)","RELACAO DE BENS.(Resumo pro Conta") 
+	cabec1 := "Codigo Item Descricao                           C.C GR Dt.Aquis Dt.Baixa Cnt.Contab  Qtd.Atual Val.Original      D E P R E C I A C A O"
+	cabec2 := "                                                                                                            Dt.Movto      Valor     Residual"
+	//         999999 9999 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 999 XX 99/99/99 99/99/99 99.999.999 999.999,99 9.999.999,99 99/99/99 999.999,99 9.999.999,99
+	//         0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+	//                   111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999000000000011111111112222222222333333333344444444445555555555
+
+	If nLastKey == 27
+		Return
+	Endif
+
+
+	nTipo  := IIF(aReturn[4]==1,15,18)
+	cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicio do Processamento da Nota Fiscal                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	#IFDEF WINDOWS
+	RptStatus({|| RptDetail()})
+Return
+Static Function RptDetail()
+	#ENDIF
+
+	dbSelectArea('SN3')
+	dbSetOrder(2)
+	SetRegua(RecCount())
+
+	dbSeek(xFilial('SN3')+mv_par01,.T.)
+
+	xItem    := 0
+	xValor   := 0
+	While !Eof() .And. N3_CCONTAB <= MV_PAR02 .And. lContinua
+
+		IncRegua()
+
+		#IFNDEF WINDOWS
+		If LastKey() == 286
+			lEnd := .t.
+		End
+		#ENDIF
+
+		If lEnd
+			@PROW()+1,001 PSAY "CANCELADO PELO OPERADOR"
+			lContinua := .F.
+			Exit
+		Endif
+
+		xConta   := N3_CContab
+		xDepAcum := 0
+		xValOrig := 0
+
+		While !Eof() .And. xConta == N3_CContab
+
+			IncRegua()
+
+			If N3_Baixa # "0" .And. Mv_par07 # 1 .Or. N3_Aquisic > Mv_Par06
+				dbSkip()
+				Loop
+			End
+
+			#IFNDEF WINDOWS
+			If LastKey() == 286
+				lEnd := .t.
+			End
+			#ENDIF
+
+			If lEnd
+				@PROW()+1,001 PSAY "CANCELADO PELO OPERADOR"
+				lContinua := .F.
+				Exit
+			Endif
+
+			dbSelectArea('SN1')
+			dbSetOrder(1)
+			dbSeek(xFilial('SN1')+SN3->N3_CBASE+SN3->N3_ITEM)
+
+			dbSelectArea('SN3')
+
+			If (SN1->N1_cBase < MV_Par08 .OR. SN1->N1_cBase > MV_Par09) .Or. ;
+			(SN1->N1_Aquisic < MV_Par10 .OR. SN1->N1_Aquisic > MV_Par11)
+				dbSkip()
+				Loop
+			End   
+
+			@ li, 000      PSAY SubStr(N3_CBASE,1,6)
+			@ li, PCOL()+1 PSAY N3_ITEM
+			@ li, PCOL()+1 PSAY SubStr(SN1->N1_DESCRIC,1,35)
+			@ li, PCOL()+1 PSAY SubStr(N3_CCUSTO,1,3)
+			@ li, PCOL()+1 PSAY SubStr(SN1->N1_GRUPO,1,2)
+			@ li, PCOL()+1 PSAY SN1->N1_AQUISIC
+			@ li, PCOL()+1 PSAY SN3->N3_DTBAIXA
+			@ li, PCOL()+1 PSAY Transform(SubStr(N3_CCONTAB,1,8),"@R 99.999.999")
+			@ li, PCOL()+1 PSAY Transform(SN1->N1_QUANTD,"@E 999,999.99")
+			@ li, PCOL()+1 PSAY Transform(N3_VORIG1,     "@E 9,999,999.99")
+			@ li, PCOL()+1 PSAY Transform(SN1->N1_PROJETO, "@!")
+
+			xValOrig := xValOrig + N3_VORIG1
+
+			xCol := PCOL()
+			xDeprec := 0
+			xSaldo  := 0
+
+			dbSelectArea('SN4')
+			dbSetOrder(1)
+			dbSeek(xFilial('SN4')+SN3->N3_CBASE+SN3->N3_ITEM)
+
+			While !Eof() .And. N4_CBASE+N4_ITEM==SN3->N3_CBASE+SN3->N3_ITEM .And. N4_Data <= Mv_Par06
+
+				If N4_TipoCnt # "4"
+					dbSkip()
+					Loop
+				End
+
+				xDeprec  := xDeprec + N4_VLROC1 
+				xSaldo   := SN3->N3_VORIG1 - xDeprec
+				xDepAcum := xDepAcum + N4_VLROC1 
+
+				If mv_par05 == 1
+					@ li, xCOL+1   PSAY SN4->N4_DATA
+					@ li, PCOL()+1 PSAY Transform(N4_VLROC1,"@E 999,999.99")
+					@ li, PCOL()+1 PSAY Transform(xSaldo,   "@E 9,999,999.99")
+					
+
+					li := li + 1
+					If li > 65
+						cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+					End
+				End   
+
+				dbSkip()
+
+			EndDo
+
+			If mv_par05 == 2 .Or. xDeprec == 0
+				@ li, xCOL+1   PSAY Mv_Par06
+				@ li, PCOL()+1 PSAY Transform(xDeprec,"@E 999,999.99")
+				@ li, PCOL()+1 PSAY Transform(xSaldo, "@E 9,999,999.99")
+
+				If xDeprec == 0
+					li := li + 1
+				End
+			End   
+
+			dbSelectArea('SN3')
+
+			li := li + 1
+			xItem := xItem + 1
+
+			If li > 65
+				cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+			End
+
+			dbSkip()
+
+		EndDo
+
+		If xValOrig > 0 
+
+			li := li + 1
+
+			If li > 65
+				cabec(titulo,cabec1,cabec2,nomeprog,tamanho,nTipo)
+			End
+
+			@ li, 000 PSAY "Total da Conta:  "+Transform(xConta,"@R 99.999.999")
+			@ li, 085 PSAY Transform(xValOrig,"@E 99,999,999.99") 
+			@ li, 105 PSAY Transform(xDepAcum,"@E 99,999,999.99")
+			@ li, 119 PSAY Transform(xValOrig-xDepAcum,"@E 99,999,999.99")
+
+			li := li + 1
+			@ li,000 PSAY Repl("-",limite)
+			li := li + 2
+
+		End   
+
+	EndDo
+
+	If li !=80
+		roda(cbcont,cbtxt)
+	End
+
+	dbSelectArea("SN1")
+	RetIndex("SN1")
+
+	dbSelectArea("SN3")
+	RetIndex("SN3")
+
+	Set Device To Screen
+
+	If aReturn[5] == 1
+		Set Printer to
+		dbCommitAll()
+		OurSpool(wnrel)
+	End
+
+	MS_FLUSH()      
+
+Return
