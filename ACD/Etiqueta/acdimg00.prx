@@ -1,0 +1,270 @@
+
+/*
+Padrao Zebra
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³IMG00     ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de rosto.               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function IMG00
+If Alltrim(funname())=="U_ACDV100OP"
+   paramixb:={}
+   Aadd(paramixb,"CARETIQOP")
+EndIf 
+If paramixb[1] =='T_ACDI10PR' .or. paramixb[1] =='T_ACDI10CX' .or. paramixb[1] =='T_ACDI10DE'
+	/*  	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'PRODUTO DE :'+mv_par01,"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('SB1',1,xFilial("SB1")+mv_par01,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'PRODUTO ATE:'+mv_par02,"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('SB1',1,xFilial("SB1")+mv_par02,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBEND()*/
+ElseIf paramixb[1] =='T_ACDI070'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'RECURSO DE :'+mv_par01,"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('SH1',1,xFilial("SH1")+mv_par01,"H1_DESCRI"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'RECURSO ATE:'+mv_par02,"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('SH1',1,xFilial("SH1")+mv_par02,"H1_DESCRI"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='T_ACDI080'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'TRANSACAO DE :'+mv_par01,"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('CBI',1,xFilial("CBI")+mv_par01,"CBI_DESCRI"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'TRANSACAO ATE:'+mv_par02,"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('CBI',1,xFilial("CBI")+mv_par02,"CBI_DESCRI"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='T_ACDV210' .or. paramixb[1] =='T_ACDV220'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'PRODUTO DE :'+CB0->CB0_CODPRO,"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('SB1',1,xFilial("SB1")+CB0->CB0_CODPRO,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'PRODUTO ATE:'+CB0->CB0_CODPRO,"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('SB1',1,xFilial("SB1")+CB0->CB0_CODPRO,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='RT_ACDI10PR' .OR. paramixb[1] =='RT_ACDI10CX'
+	/*	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,04,'RE-IMPRESSAO DE ETIQUETA',"N","0","025,035",.T.)
+	MSCBSAY(05,10,'PRODUTO : '+CB0->CB0_CODPRO,"N","0","025,035",.T.)
+	MSCBSAY(05,14,Posicione('SB1',1,xFilial("SB1")+CB0->CB0_CODPRO,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBSAY(05,18,'DESCRICAO DA BARRA: ',"N","0","025,035",.T.)
+	MSCBSAY(05,26,CB0->CB0_CODETI,"N","0","025,035",.T.)
+	MSCBEND() */
+ElseIf paramixb[1] =='T_ACDI10PD'.OR. paramixb[1] =='T_ACDV125'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'PEDIDO :'+paramixb[2],"N","0","025,035",.T.)
+	MSCBSAY(05,16,'FORNECEDOR:'+paramixb[3],"N","0","025,035",.T.)
+	MSCBSAY(05,20,Posicione('SA2',1,xFilial("SA2")+paramixb[3]+paramixb[4],"A2_NREDUZ"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='T_ACDI10NF' .OR. paramixb[1] =='ACDI10NF' // identificacao de produto
+	//Rmogi
+	/*
+	MSCBBEGIN(1,4) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'NOTA :'+SF1->F1_DOC+' '+SF1->F1_SERIE,"N","0","025,035",.T.)
+	MSCBSAY(05,16,'FORNECEDOR:'+SF1->F1_FORNECE,"N","0","025,035",.T.)
+	MSCBSAY(05,20,Posicione('SA2',1,xFilial("SA2")+SF1->F1_FORNECE+SF1->F1_LOJA,"A2_NREDUZ"),"N","0","025,035",.T.)
+	MSCBEND()
+	*/
+	
+	IF UsaCB0("07")
+		cID := CBGrvEti('07',{"",SF1->F1_DOC,SF1->F1_SERIE,SF1->F1_FORNECE,SF1->F1_LOJA})
+		nX  := 22
+	Else
+		cID := SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA
+		nX  := 10
+	EndIf
+	
+	MSCBLOADGRF("SIGA.GRF")
+	MSCBBEGIN(1,6)
+	MSCBBOX(30,05,76,05)
+	MSCBBOX(02,12.7,76,12.7)
+	MSCBBOX(02,21,76,21)
+	MSCBBOX(30,01,30,12.7,3)
+	MSCBGRAFIC(2,3,"SIGA")
+	MSCBSAY(33,02,"ENTRADA DE MATERIAL","N","0","025,035")
+	MSCBSAY(33,06,"FORNECEDOR","N","A","012,008")
+	MSCBSAY(33,08, alltrim(SA2->A2_NOME), "N", "0", "032,035")
+	MSCBSAY(05,14,'NOTA :'+SF1->F1_DOC+' '+SF1->F1_SERIE,"N","0","025,035",.T.)
+	MSCBSAY(05,17,'FORNECEDOR:'+SF1->F1_FORNECE,"N","0","025,035",.T.)
+	MSCBSAYBAR(nX,22,cId,"N","MB07",8.36,.F.,.T.,.F.,,2,1,.F.,.F.,"1",.T.)
+	MSCBInfoEti("Volume Entrada","30X100")
+	sConteudo:=MSCBEND()
+	
+ELSEIf paramixb[1] =='T_ACDI10OP' .OR. paramixb[1] =='T_ACDV025'
+	
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBSAY(05,12,'PRODUTO  :'+SD3->D3_COD,"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('SB1',1,xFilial("SB1")+SD3->D3_COD,"B1_DESC"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'DOCUMENTO:'+SD3->D3_DOC,"N","0","025,035",.T.)
+	MSCBSAYBAR(23,24,SD3->D3_DOC,"N",'C',8.36,.F.,.T.,.F.,,2,1,.F.,.F.,"1",.T.)
+	MSCBEND()
+	
+ELSEIf paramixb[1] =='T_ACDV040'
+	If Posicione('SF5',1,xFilial("SF5")+paramixb[2],"F5_TIPO")=="R"
+		MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+		MSCBLineV(01,01,32,300)
+		MSCBSAY(05,12,'REQUISICAO:',"N","0","025,035",.T.)
+		If ! Empty(paramixb[3])
+			MSCBSAY(05,18,'O.P: '+paramixb[3],"N","0","025,035",.T.)
+		Endif
+		MSCBEND()
+	Else
+		MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+		MSCBLineV(01,01,32,300)
+		MSCBSAY(05,12,'DEVOLUCAO:',"N","0","025,035",.T.)
+		MSCBEND()
+	Endif
+ELSEIf paramixb[1] =='T_ACDV170'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBLineV(01,01,32,300)
+	MSCBSAY(05,12,'EXPEDICAO:',"N","0","025,035",.T.)
+	If ! Empty(paramixb[2])
+		MSCBSAY(05,18,'ORDEM DE SEP: '+paramixb[2],"N","0","025,035",.T.)
+	Endif
+	MSCBEND()
+ELSEIf paramixb[1] =='T_ACDV230'
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBLineV(01,01,32,300)
+	MSCBSAY(05,12,'PALLET: '+paramixb[2],"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='T_ACDI020LO'  // endereco
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'Almox de :'+mv_par01,"N","0","025,035",.T.)
+	MSCBSAY(05,16,'Almox ate:'+mv_par02,"N","0","025,035",.T.)
+	MSCBSAY(05,20,'Endereco de :'+mv_par03,"N","0","025,035",.T.)
+	MSCBSAY(05,24,'Endereco ate:'+mv_par04,"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] =='RT_ACDI020LO'  // endereco
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,04,'RE-IMPRESSAO DE ETIQUETA',"N","0","025,035",.T.)
+	MSCBSAY(05,10,'ENDERECO : '+CB0->CB0_LOCALI,"N","0","025,035",.T.)
+	MSCBSAY(05,18,'DESCRICAO DA BARRA: ',"N","0","025,035",.T.)
+	MSCBSAY(05,26,CB0->CB0_CODETI,"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'T_ACDI030DM'  // dispositivo de movimentacao
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'Dispositivo de :'+paramixb[2],"N","0","025,035",.T.)
+	MSCBSAY(05,20,'Dispositivo ate:'+paramixb[3],"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'RT_ACDI030DM'  // dispositivo de movimentacao
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,04,'RE-IMPRESSAO DE ETIQUETA',"N","0","025,035",.T.)
+	MSCBSAY(05,10,'DISPOSITIVO MOV.: '+CB0->CB0_DISPID,"N","0","025,035",.T.)
+	MSCBSAY(05,18,'DESCRICAO DA BARRA: ',"N","0","025,035",.T.)
+	MSCBSAY(05,26,CB0->CB0_CODETI,"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'T_ACDI050TR' // transportadora
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'Transportadora de :'+paramixb[2],"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('SA4',1,xFilial("SA4")+paramixb[2],"A4_NOME"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'Transportadora ate:'+paramixb[3],"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('SA4',1,xFilial("SA4")+paramixb[3],"A4_NOME"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'RT_ACDI050TR' // transportadora
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,04,'RE-IMPRESSAO DE ETIQUETA',"N","0","025,035",.T.)
+	MSCBSAY(05,10,'TRANSPORTADORA: '+CB0->CB0_TRANSP,"N","0","025,035",.T.)
+	MSCBSAY(05,14,Posicione('SA4',1,xFilial("SA4")+CB0->CB0_TRANSP,"A4_NOME"),"N","0","025,035",.T.)
+	MSCBSAY(05,18,'DESCRICAO DA BARRA: ',"N","0","025,035",.T.)
+	MSCBSAY(05,26,CB0->CB0_CODETI,"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'T_ACDI060US' // OPERADOR (USUARIO)
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,12,'Operador de :'+paramixb[2],"N","0","025,035",.T.)
+	MSCBSAY(05,16,Posicione('CB1',1,xFilial("CB1")+paramixb[2],"CB1_NOME"),"N","0","025,035",.T.)
+	MSCBSAY(05,20,'Operador ate:'+paramixb[3],"N","0","025,035",.T.)
+	MSCBSAY(05,24,Posicione('CB1',1,xFilial("CB1")+paramixb[3],"CB1_NOME"),"N","0","025,035",.T.)
+	MSCBEND()
+ElseIf paramixb[1] == 'RT_ACDI060US' // transportadora
+	MSCBBEGIN(1,6 ) //Inicio da Imagem da Etiqueta
+	MSCBBOX(00,00,76,40,200)
+	MSCBSAY(05,04,'RE-IMPRESSAO DE ETIQUETA',"N","0","025,035",.T.)
+	MSCBSAY(05,10,'Operador: '+CB0->CB0_USUARI,"N","0","025,035",.T.)
+	MSCBSAY(05,14,Posicione('CB1',1,xFilial("CB1")+CB0->CB0_USUARI,"CB1_NOME"),"N","0","025,035",.T.)
+	MSCBSAY(05,18,'DESCRICAO DA BARRA: ',"N","0","025,035",.T.)
+	MSCBSAY(05,26,CB0->CB0_CODETI,"N","0","025,035",.T.)
+	MSCBEND()
+	
+ELSEIf paramixb[1] =='MA651PRC' .OR. paramixb[1] =='CARETIQOP' //Alterado para imprimir a cara da etiqueta 20/09/2011
+        If  paramixb[1] =='MA651PRC' 
+			_cOP := M->C2_NUM + M->C2_ITEM + M->C2_SEQUEN
+			_cProduto := M->C2_PRODUTO 
+			_cQuant := M->C2_QUANT  
+		Else//  paramixb[1] =='U_NSACDA05'
+			_cOP := SC2->C2_NUM + SC2->C2_ITEM + SC2->C2_SEQUEN
+			_cProduto := SC2->C2_PRODUTO 
+			_cQuant := SC2->C2_QUANT  		
+		EndIf
+        inclui := .T.
+		_cDesc  := Posicione('SB1',1,xFilial("SB1")+_cProduto,"B1_DESC")
+    	_TpFaixa:= Posicione('SB1',1,xFilial("SB1")+_cProduto,"B1_TPFAIXA")
+    
+         /**/
+         
+		If Alltrim(_TpFaixa)="1"
+			_TpFaixa:="Etiq:D.SIMP e Cor: " 
+		Elseif Alltrim(_TpFaixa)="2"	
+			_TpFaixa:="Etiq:D.DUPLA e Cor: "
+		Elseif	Alltrim(_TpFaixa)="3"	
+			_TpFaixa:="Etiq:HORIZ e Cor: "
+        Else 
+            _TpFaixa:="Etiq:BRANCA "
+		EndIf		   
+	    Cor1:=Alltrim(Posicione("SX5",1,xFilial("SX5")+"ZY"+SB1->B1_COR1,"X5_DESCRI"))
+	    Cor2:=Alltrim(Posicione("SX5",1,xFilial("SX5")+"ZY"+SB1->B1_COR2,"X5_DESCRI"))
+        _TpFaixa+=Substr(Cor1,1,5)+Iif(!Empty(cor2),'/'+Substr(Cor2,1,5),'')
+    
+	
+		/* Alteração efetuada para atualização da etiqueta 09/11*/
+ 		MSCBBEGIN(1,5) 
+		mscbwrite('^XA~TA000~JSN^LT0^MMT^MNW^MTT^PON^PMN^LH0,0^JMA^PR6,6^MD8^JUS^LRN^CI0^XZ')
+	    mscbwrite('~DG000.GRF,13312,052,')
+		mscbwrite(',::::::::::::::::::::::::gV07FPFE0gK01FgXF8,:gU03FRF80gJ07FgWFE0,::gU0UFgI01FgYFE0,:gU0UFgI07FgYF,::gU0UFE0gG07FgYF,:gT07FTFE0g0hGFC,::gS0XF80Y0hFE0,:gS0YFg0hFE0,::gS0YFg0hF80,:gR03FXFC0X0gYFC,::gQ01FgF80W0gGF8,::::::gQ01FgFE0W0gGF8,::gQ07FgFE0T03F83FgF,:gP03FgGFE0T03F83FgFC0,::gP03FgGFE0S01FF83FgFC0,:gP0gJFC0R01FHF07FgFE,::gO07FgJFS07FHFC1FgFE,:gO07FgJFE0Q07FHFC007FXFE,::gO07FgJFE0P03FIFC007FYFC0,:gN01FgLF80O0LF807FgF0,::gN0gOFP0LFE01FgF0,:gN0gOFO07FKFE01FgFE,::gN0gOFN01FLFE01FgGF80,:gM03FLFC7FYFC0L0NF8003FgGF0,::gL01FMF01FgF80K0MFC0I01FgF0,:gL01FLF8003FYF80J03FLFC0I01FgFE,::gL01FLF8003FYF80J03FLFK01FgFE,:gL07FLF80H01FXF80J03FLFL07FgF80,::gL07FKFK01FXFE0J03FKF80K07FgGF0,:gJ01FMFL07FXFC0H07FLF80L0gHF0,::gJ01FMFL07FYFI07FLF80L0gHFC,:gJ01FKFE0L07FYFI07FKFE0M0gIF80,::gJ01FKFE0L07FYFE0FMFO03FgGF80,:gJ07FKFE0M03FgMFC0O07FgFE0,::gJ07FKFE0M03FgMFC0O01FgFE0,:gI0NFE0M03FgLFE0P01FgGFC,::gI0NF80N07FgKF80Q03FgGF,:gH07FLFC0O07FgKF80R0gHFE0,::gH07FLFC0O01FgJFC0S0gHFE0,:gH07FLFQ01FgJFC0S01FgFE0,::gG01FLF80P01FgJFC0S01FgFE0,:gG0MFE0S0gJFV07FgGFC0,::gG0MFE0S0gIF80V0gHFC0,:gG0MFE0S0gHFE0W0gHFC0,::g03FLFU01FgFE0W0gHFC0,:g03FLFU01FYFC0X03FgFC0,::Y01FLFC0T01FYFC0X03FgFC0,:Y01FLFC0U07FXFC0X03FgFC0,::Y01FKFE0W0YFC0X03FgFC0,:X03FLF80W03FVFE0FhF,::X03FLF80W03FVF83FhF,:W07FMF80X07FUF83FgYF8,::W07FLFC0Y07FUF83FgYF8,:W07FLFC0Y07FTFC03FgXFE0,::W07FKFE0g07FTF01FgYF,:W07FKF80g01FRFE007FgYF,::V01FLF80g01FRFE007FgYF,:V01FLF80gG03FQFE03FgYFC,::,:::::::::::::::::::::::::::::::::::::::::Q0YFC0I0XFE0K01FXFE0H03FgJF807FLF80,::P03FYF80H0YFC0J0gFE0H0gKFE007FLF80,:Q0gFE007FXFC0H01FgFE01FVF8FMFH03FMF80,::P03FYFE01FgFI07FgF80FWF8FMFH03FLFE,:O01FMFC0I03FLFE0FMF80I07FMFE0FOFC0H07FLFH03FLFC0P0NFH03FLF0,::O01FMFC0I03FLFE0FMF80I07FMFH03FNFJ07FLFH03FLFC0P0NFH03FLF0,:O01FLF80K07FKFE0FMF80I07FMFH0NFK01FMF07FMFQ07FKFE0H0NF0,::O01FLF80J0NFE0FMF80I07FMFH0MFC0J01FMF07FLF80O01FLFE007FLFC0,:O07FLF80J0NF9FMFC0J07FKFE007FLFC0J0OF3FNFC0N01FLFE007FLFC0,::N03FMF80I07FMF9FMFC0J07FKFE007FLFC0J0NF83FNFC0N0NFE007FLFC0,:N03FMF80H01FMFC1FLF80J03FLFE01FMFC0I03FMF83FOF80M0NFE007FLFC0,::N0NFE0I0OF01FLF80I07FMFE01FMFC0I03FLFE007FNF80L07FMFE0FMF8,:M07FMF07FOFE007FLF807FNF80H01FMFC0701FMFE007FPFL07FLFC00FMFE,::M07FYFI07FWFE0I0gHFI01FPFK01FMFC03FMF8,:M07FUFE01C0H07FUFE70J0gHFJ03FPF80H01FMFH03FLFC0,::L01FXF80H03FVFE0J03FgGFJ03FPF80H01FMF01FMFC0,:L01FYFC07FYFI01FgGFC0J0RFI0NF801FMFC0,::L01FLFE30H07FLFC07FLFC0I03FLFI01FMFJ073FLFE0K01FPFC00FMF801FLF8,:L0NF80I01FMF07FLFC0J0MFI01FMFK03FLFE0M0PFC03FLFE001FLF8,::L0NF80I01FMF1FMFC0J0NF801FLF80J0NFE0M0PFC03FLFE007FLF8,:L0NF80I07FMF1FMFC0I03FLFE007FKFE0K0NF80M03FNFC1FMFE03FMF8,::K03FLFC0J07FLFCFMFE0J03FLFI07FKFE0J07FMF80N01FMFC1FMFH03FLFE0,:J01FMFC0I03FLFE0FMF80J03FLFH03FLFE0K0NF80N01FMFC1FMFH03FLFE0,::J01FMFC0I03FLFE0FMF80I01FMFH0NFE0J07FLFC0O01FMFC1FMFH03FLFE0,:J07FLF80J0NFE0FLFC0J01FMFH0NFE0I01FLFE0O03FMF83FMFC07FMF,::J07FMF3FF1FNF83FLFC0J07FMF07FMFE0I01FLFE063FIFCFPF83FLFE007FNF8FKFE0,:J07FYFC03FLFC0J07FLF807FLFC0J0NF807FVF8FMFE01FWFC,::I03FYF801FMFC0I03FMF807FLFC0J0NF807FUFH0NF801FWFC,:I0gFI01FMFK03FLFE01FMFC0I03FLFC03FTFE007FMF80FWFE0,::I0XFE0I01FMFK03FLFE01FLFE0J03FLFC03FSFC0H07FMF801FVF80,:I0VFE0K01FLF80J0NFH0NF80J03FLFH03FPFC0K07FMF80FWF80,::,::::::::::::::::::::::::^XA^LL0898')
+		mscbwrite('^PW898')
+		mscbwrite('^FT224,288^XG000.GRF,1,1^FS')
+		mscbwrite('^FO20,15^GB870,874,12^FS')
+		mscbwrite('^FT654,575^A0N,37,40^FH\^FDQdt.Etq.:^FS')
+		mscbwrite('^FT406,576^A0N,37,40^FH\^FDQdt.OP:^FS')
+		mscbwrite('^FT804,574^A0N,37,40^FH\^FD'+ iif(inclui, TRANSFORM(xQdtEtiq,"@E 999"),"") +'^FS')
+		mscbwrite('^FT537,575^A0N,37,40^FH\^FD'+ TRANSFORM(_cQuant,"@E 999,999") +'^FS')
+		mscbwrite('^FT56,797^A0N,37,40^FH\^FDAss:^FS')
+		mscbwrite('^FT145,798^A0N,37,40^FH\^FD_________________________________^FS')
+		mscbwrite('^FT56,714^A0N,37,40^FH\^FDEntregue em:^FS')
+		mscbwrite('^FT296,715^A0N,37,40^FH\^FD____/____/____^FS')
+		mscbwrite('^FT462,645^A0N,37,40^FH\^FDEtq. At\82:^FS')
+		mscbwrite('^FT620,645^A0N,37,40^FH\^FD'+ iif(inclui,xAteEtiq,"") +'^FS')
+		mscbwrite('^FT57,642^A0N,37,40^FH\^FDEtq. De:^FS')
+		mscbwrite('^FT214,644^A0N,37,40^FH\^FD'+ iif(inclui,xDeEtiq,"") + '^FS')
+		mscbwrite('^FT59,574^A0N,37,40^FH\^FDOP:^FS')
+		mscbwrite('^FT138,574^A0N,37,40^FH\^FD'+ _cOP +'^FS')
+		mscbwrite('^FT54,374^A0N,37,40^FH\^FDProduto:^FS')
+		mscbwrite('^FT210,375^A0N,37,40^FH\^FD'+ _cProduto +'^FS')
+		mscbwrite('^FT55,446^A0N,54,43^FH\^FD'+ Subs(_cDesc,1,35) +'^FS')
+		mscbwrite('^FT54,514^A0N,42,40^FH\^FD'+_TpFaixa+'^FS')
+		mscbwrite('^PQ1,0,1,Y^XZ')
+		mscbwrite('^XA^ID000.GRF^FS^XZ')
+	  	mscbinfoeti("Capa","75x75")     
+		mscbend()
+  		
+	
+	
+EndIf
+Return .t.
