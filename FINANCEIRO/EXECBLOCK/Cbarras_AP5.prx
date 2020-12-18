@@ -1,0 +1,562 @@
+#INCLUDE "TOPCONN.CH"
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+****************************
+User Function Cbarras()
+****************************
+
+SetPrvt("XLINHA,")
+
+// CBARRAS.PRX -> EXECBLOCK PARA RETIRADA DAS INFORMACOES COMPLEMENTARES DA
+//                LINHA DIGITAVEL OU CODIGO DE BARRAS.
+
+xLinha := ""
+
+If SE2->E2_LD == "S"
+	
+	//*****************************************************************
+	// Procedimentos para decomposicao a partir da Linha digitabel.
+	// Banco Igual a 237-BRADESCO
+	//*****************************************************************
+	
+	xLinha := SubStr(SE2->E2_CBARRAS,5,5)+SubStr(SE2->E2_CBARRAS,11,10)+SubStr(SE2->E2_CBARRAS,22,10)
+	
+Else
+	
+	//*****************************************************************
+	// Procedimentos para decomposicao a partir do Codigo de Barras.
+	// Banco Igual a 237-BRADESCO
+	//*****************************************************************
+	
+	xLinha := SubStr(SE2->E2_CBARRAS,20,44)
+	                                      
+End
+
+// Modalidade de Pagto do tipo "DOC ou TED"
+If Empty(SE2->E2_CBARRAS) .And. AllTrim(SE2->E2_nBanco) # "237"
+	
+	Do Case
+		Case SE2->E2_Valor < 5000  .And. SA2->A2_CGC <> SM0->M0_CGC
+			xLinha := "C00000001"  // DOC - NORMAL
+		Case SE2->E2_Valor < 5000  .And. SA2->A2_CGC == SM0->M0_CGC
+			xLinha := "D00000001"  // DOC - MESMA TITULARIDADE
+		Case SE2->E2_Valor >= 5000 .And. SA2->A2_CGC <> SM0->M0_CGC
+			xLinha := "C00000001"  // TED - NORMAL
+		Case SE2->E2_Valor >= 5000 .And. SA2->A2_CGC == SM0->M0_CGC
+			xLinha := "D00000001"  // TED - MESMA TITULARIDADE
+	EndCase
+	
+	//If SE2->E2_Valor < 5000
+	//   xLinha := "C00000001"  // DOC - NORMAL
+	//End
+	
+End
+
+xLinha := AllTrim(xLinha)
+
+Return(xLinha)
+
+
+******************************
+User Function xTipoFor()
+******************************
+
+// xTipoFor -> Configura CNAB Lay Out de remessa de cobranca, conforme o tipo do Fornecedor,
+//             F-Pessoa Fisica (CPF) ou J-Pessoa Juridica (CNPJ).
+
+SetPrvt("xTipo,")
+
+xTipo := ""
+If SA2->A2_Tipo == "F"
+	xTipo := Left(Alltrim(SA2->A2_CGC),9)+"0000"+Right(Alltrim(SA2->A2_CGC),2)
+ElseIf SA2->A2_Tipo == "J"
+	xTipo := StrZero(Val(SA2->A2_CGC),15)
+Else
+	xTipo := "000000000000000"
+End
+
+Return(xTipo)
+
+
+
+******************************
+User Function cModal()
+******************************
+
+// CBARRAS.PRX -> Identifica a Modalidade de Pagamento 01 - Credito em Conta Corrente,
+//                03 - D0C e 31 - Titulos de Terceiro.
+
+SetPrvt("XMODAL,")
+
+XMODAL := ""
+If Empty(SE2->E2_cBarras)
+	If AllTrim(SE2->E2_nBanco) == "237"
+		XMODAL := "01"  // Deposito em Conta Corrente
+	Else
+		If SE2->E2_Valor < 5000
+			XMODAL := "03" // DOC
+		Else
+			XMODAL := "08" // TED
+		End
+	End
+Else
+	XMODAL := "31" // Outros Bancos -> Boleto Bancario
+End
+
+Return(XMODAL)
+
+
+******************************
+User Function TabPreco()
+******************************
+
+SetPrvt("XTABPRECO,")
+//                                  
+_cCodTab   := aCols[1,3]
+//
+XTABPRECO := .T.
+xAlias := Alias()
+dbselectarea(xAlias)
+xRecno := Recno()
+//
+dbSelectArea("DA1")
+nOrdDA1 := DA1->(dbSetOrder())
+dbSetOrder(1)                  
+//
+If dbSeek(xFilial("DA1")+ _cCodTab+ M->DA1_CODPRO)
+	msgstop("Produto já cadastrado para esta tabela!!!")
+	XTABPRECO := .F.      
+Else
+	aCols[n, ascan(aHeader, {|x| Alltrim(x[2]) == "DA1_CODTAB"}) ] := aCols[1, ascan(aHeader, {|x| Alltrim(x[2]) == "DA1_CODTAB"})]	
+Endif
+//
+DA1->(dbSetOrder(nOrdDA1))
+//
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+//
+Return(XTABPRECO)
+
+// EM 16/04/2015 POR ALEX ALMEIDA
+// FOI CRIADO O FONTE GPECUSTO.PRW
+// PARA TRANSFERIR PARA CENTRALIZAR OS
+// PROGRAMAS DO CUSTO.
+// User Function GPECUSTO()
+// Return(XCONTA)
+//
+
+******************************
+User Function ATFCUSTO()
+******************************
+
+SetPrvt("XCONTA")
+
+XCONTA := ""
+xRecno := Recno()
+xAlias := Alias()
+
+If M->N3_CCUSTO < "200" 
+     XCONTA := "35121003"
+ElseIf M->N3_CCUSTO <= "211" 
+     XCONTA := "31121003"
+ElseIf M->N3_CCUSTO <= "221" 
+     XCONTA := "31221003"
+ElseIf M->N3_CCUSTO <= "231" 
+     XCONTA := "31421003"
+ElseIf M->N3_CCUSTO <= "241" 
+     XCONTA := "31321003"
+ElseIf M->N3_CCUSTO <= "251" 
+     XCONTA := "31621003"     
+Else 
+     XCONTA := "31521003"
+End
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(XCONTA)
+
+
+
+******************************
+User Function QProd()
+******************************
+
+SetPrvt("xPassa")
+
+xPassa := .T.
+
+
+If funname() == "MATA250"   // m->d3_tm == "400"
+	xRecno := Recno()
+	xAlias := Alias()
+	nQuant := m->D3_Quant
+	If alltrim(m->d3_cc)="231"
+		nQuant -= nQuant*0.1
+	EndIf
+	dbSelectArea("SC2")
+	dbSetOrder(1)
+	dbSeek(xFilial("SC2")+m->d3_op)
+	If nQuant > (SC2->C2_Quant - (SC2->C2_Quje + SC2->C2_Perda) )
+		msgstop("Quantidade informada, maior que o Saldo da OP. Saldo da OP == " + Transform(SC2->C2_Quant - (SC2->C2_Quje + SC2->C2_Perda ) ,"@E 999,999"))
+		xPassa := .F.
+	End
+	
+	dbSelectArea(xAlias)
+	dbGoto(xRecno)
+End
+
+Return(xPassa)
+
+******************************
+User Function QPerda()
+******************************
+
+SetPrvt("xPassa")
+
+xPassa := .T.
+
+If FunName() == "MATA250" .Or. FunName() == "PCPA01"
+	xRecno := Recno()
+	xAlias := Alias()
+	nQuant := m->d3_quant
+	If alltrim(m->d3_cc)="231"
+		nQuant -= nQuant*0.1
+	EndIf
+	dbSelectArea("SC2")
+	dbSetOrder(1)
+	dbSeek(xFilial("SC2")+m->d3_op)
+	If m->D3_Perda > SC2->C2_Quant - (SC2->C2_Quje + SC2->C2_Perda + nQuant )
+		msgstop("Quantidade de Perdas maior que o Saldo da OP. Saldo da OP == " + Transform(SC2->C2_Quant - (SC2->C2_Quje + SC2->C2_Perda + m->d3_quant ) ,"@E 999,999"))
+		xPassa := .F.
+	End
+	
+	dbSelectArea(xAlias)
+	dbGoto(xRecno)
+End
+
+Return(xPassa)
+
+****************************************
+User Function VLTOTAL()
+****************************************
+
+SetPrvt("xTotal")
+
+xRecno := Recno()
+xAlias := Alias()
+
+xTotal  := 0
+
+xTotal := (M->IA_VLORC01 + ;
+           M->IA_VLORC02 + ;
+           M->IA_VLORC03 + ;
+           M->IA_VLORC04 + ;
+           M->IA_VLORC05 + ;
+           M->IA_VLORC06 + ;
+           M->IA_VLORC07 + ;
+           M->IA_VLORC08 + ;
+           M->IA_VLORC09 + ;
+           M->IA_VLORC10 + ;
+           M->IA_VLORC11 + ;
+           M->IA_VLORC12)
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(xTotal)
+
+
+****************************************
+User Function VaLTotal()
+****************************************
+
+SetPrvt("xTotal")
+
+xRecno := Recno()
+xAlias := Alias()
+
+xTotal  := 0
+
+xTotal := (M->E7_VALJAN1+M->E7_VALFEV1+M->E7_VALMAR1+M->E7_VALABR1+M->E7_VALMAI1+M->E7_VALJUN1+M->E7_VALJUL1+M->E7_VALAGO1+M->E7_VALSET1+M->E7_VALOUT1+M->E7_VALNOV1+M->E7_VALDEZ1)
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(xTotal)
+
+****************************
+User Function FA050ALT()
+****************************
+
+//***********************************************************************************
+//*valida alteraçao de contas a pagar (altera natureza dos itens da nota de entrada)*
+//***********************************************************************************
+
+Local _cArea := GetArea()
+
+dbSelectArea("SD1")
+dbSetOrder(1)
+If dbSeek(xFilial("SD1")+M->E2_NUM+M->E2_PREFIXO+M->E2_FORNECE+M->E2_LOJA)
+	While !Eof() .and. M->E2_NUM+M->E2_PREFIXO+M->E2_FORNECE+M->E2_LOJA==D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA
+		Reclock("SD1",.F.)
+		SD1->D1_NATUREZ := M->E2_NATUREZ
+		MsUnLock()
+		dbSkip()
+	EndDo
+EndIf
+RestArea(_cArea)
+Return .T.
+
+******************************
+User Function PROCBASE()
+******************************
+
+SetPrvt("XCBASE")
+
+xCBASE := 0
+xRecno := Recno()
+xAlias := Alias()
+
+dbSelectArea("SN1")
+dbSetOrder(1)
+dbGoBottom()
+
+xCBASE := StrZero(Val(N1_Cbase)+1,6)
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(xCBASE)
+
+******************************
+User Function LOTECTL()
+******************************
+Local aAreaSB1 := SB1->(GetArea())
+SetPrvt("xLote")
+
+If FunName() <> "MATA242"	
+	xLote  := ""
+	xNota  := ""
+	xForn  := ""
+	cQuery := ""
+	cCod   := SC2->C2_PRODUTO
+	xRecno := Recno()
+	xAlias := Alias()
+	SB1->(DbSetOrder(1))
+	SB1->(DbSeek(xFilial("SB1")+SC2->C2_PRODUTO))
+	IF AllTrim(FunName()) $ ("MATA103/MATA140/UZX_AFILLIMP")
+		_nPosCod := aScan( aHeader, {|x| AllTrim(x[2])="D1_COD"})
+		If _nPosCod <> 0
+			SB1->(dbSeek( xFilial("SB1") + aCols[n, _nPosCod]) )
+		EndIf
+	EndIf
+	If AllTrim(SB1->B1_Rastro) == "L"
+		
+		If FunName() == "MATA250" 
+			// Saldo Inicial           
+			
+			cQuery := "SELECT TOP 1  R_E_C_N_O_,D1_DOC,D1_FORNECE,D1_LOTECTL FROM "+RETSQLNAME('SD1')
+			cQuery += " WHERE D1_COD='"+cCod+"' AND D_E_L_E_T_<>'*' AND D1_FILIAL='"+xFilial("SD1")+"'"
+			cQuery += " ORDER BY D1_EMISSAO DESC "
+			TCQUERY cQuery ALIAS "QrySD1" NEW
+			xLote := QrySD1->D1_LOTECTL
+			DBCloseArea()		
+		Else		
+			xForn := Left( Posicione("SA2", 1, xFilial("SA2") + CA100FOR+CLOJA, "A2_NOME"),4)
+			If ValType("cNFiscal")=="U"
+				cNFiscal := ""
+			EndIf		
+			Nf := Alltrim(cNFiscal)
+		    If Empty(cNFiscal)           // Para Nota Fiscal com formulario == S
+				DbSelectArea("SX5")
+				DbSetOrder(1)
+				DbSeek(xFilial("SX5")+"012")
+				xNota := SUBSTR(AllTrim(SX5->X5_Descri),4,6)
+			Else
+				if Len(Nf)>5
+					xNota:=right(Nf,6)				
+				Else 
+					xNota:=Nf
+	//				xNota := Substr(cNFiscal,4,6)
+				EndIF 	
+			EndIF
+			xLote := xForn+xNota			
+		End                     
+		dbSelectArea(xAlias)
+		dbGoto(xRecno)
+	End	
+Else
+	If AllTrim(SB1->B1_Rastro) == "L"
+		xLote:= "DSM-"+cDocumento
+	EndIf
+EndIf
+RestArea(aAreaSB1)
+Return(xLote)    
+
+
+******************************
+User Function PegaDescr()   
+******************************
+
+// Pega descricao da Verba de Proventos ou Desconto, para historico do lancto contábil
+
+SetPrvt("XDESCR")
+
+xRecno := Recno()
+xAlias := Alias()
+
+dbSelectArea("SRV")
+dbSetOrder(1)
+dbSeek(xFilial("SRV")+SRZ->RZ_PD)
+XDESCR := SRV->RV_DESC+"  "+SRZ->RZ_CC
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(XDESCR)
+
+
+******************************
+User Function BasePis()   
+******************************
+
+// Encontra a  Base de Calculo do PIS e COFINS, para compras importados.
+
+SetPrvt("XBASEPIS,cTotal")
+
+XBASEPIS := 0
+
+cCod   := aCols[n][1]
+cTotal := aCols[n][5]
+cTxIPI := aCols[n][16] / 100
+
+xRecno := Recno()
+xAlias := Alias()
+
+dbSelectArea("SB1")
+dbSetOrder(1)
+dbSeek(xFilial("SD1")+cCod)
+
+cTxII := B1_TXII / 100
+
+XBASEPIS := cTOTAL * ((1 + 0.18 * (cTXII + cTxIPI *(1+cTXII))) / ((1 - 0.0165 - 0.076) * (1 - 0.18))) 
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(XBASEPIS)
+
+
+*****************************
+User Function A103VLR1()   
+******************************
+
+// Este Ponto de Entrada altera o valor da duplicata na nota fiscal de entrada.
+
+ParamIXB = Nil
+
+xRecno := Recno()
+xAlias := Alias()
+	
+nValor := 0
+
+//For xI:=1 to Len(aCols)
+//    nValor := nValor + (aCols[xI][5] - aCols[xI][38]) 
+//Next    
+
+IF SM0->M0_CODIGO == "04" .And. SF1->F1_EST == "EX"
+   nValor := SF1->F1_VALMERC
+Else
+   Return   
+End   
+
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return(nValor) 
+
+/*
+******************************
+User Function A103CUST()      
+******************************
+
+Local aRet := PARAMIXB[1]
+
+MSGSTOP("Entrou...")
+// Conteudo do aRet
+// aRet[1,1] -> Custo de entrada na Moeda 1
+// aRet[1,2] -> Custo de entrada na Moeda 2
+// aRet[1,3] -> Custo de entrada na Moeda 3
+// aRet[1,4] -> Custo de entrada na Moeda 4
+// aRet[1,5] -> Custo de entrada na Moeda 5
+// Customizacoes do Cliente
+ 
+IF SM0->M0_CODIGO == "04"  // Somente p/ NSSP -> Jorge Em: 18/08/2007
+   aRet[1,1] := m->d1_total + m->d1_ii + m->d1_despesa 
+   aRet[1,2] := 0
+   aRet[1,3] := 0
+   aRet[1,4] := 0
+   aRet[1,5] := 0
+End                                                  
+
+
+msgstop(Transform(XBASEPIS,"@E 999,999.99"))
+
+Return(aRet)
+*/
+
+
+
+/******************************
+User Function MT100CLA()   
+******************************
+
+// Re-Calculo do PIS e COFINS, para compras importados.
+
+SetPrvt("cSiscomex,cTotal")
+
+xRecno := Recno()
+xAlias := Alias()
+
+cSiscomex := 0.00
+cBaseICM  := 0.00
+cValICM   := 0.00
+	
+@ 96,42 TO 323,505 DIALOG oDlg6 TITLE "Despesas com Importacao"
+@ 8,10 TO 84,222
+@ 15,014 SAY "Taxa Siscomex    "
+@ 30,014 SAY "Base do ICMS     "
+@ 45,014 SAY "Mensagem da Nota "
+@ 15,070 Get cSiscomex PICTURE "@E 999,999,999.99"
+@ 30,070 Get cBaseICM  PICTURE "@E 999,999,999.99"
+@ 45,070 Get cValICM   PICTURE "@E 999,999,999.99"
+	
+@ 91,168 BMPBUTTON TYPE 1 ACTION _OkPrc()
+@ 91,196 BMPBUTTON TYPE 2 ACTION Close(oDlg6)
+	
+ACTIVATE DIALOG oDlg6 CENTERED
+Return Nil
+	
+dbSelectArea(xAlias)
+dbGoto(xRecno)
+
+Return()
+
+Return()
+
+************************
+Static Function _okPrc()
+************************
+Close(oDlg6)
+
+RecLock("SF1",.F.)
+  SF1->F1_DESPESA := cSiscomex
+  SF1->F1_BASEICM := cBaseICM
+  SF1->F1_VALICM  := cValICM
+msUnlock()
+
+Return()*/
+
+
+

@@ -1,0 +1,31 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+User Function valdoc()        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("XVALOR,")
+
+// VALDOC.PRX -> EXECBLOCK PARA RETIRADA DO VALOR DO DOCUMENTO DA
+//               LINHA DIGITAVEL OU CODIGO DE BARRAS.
+
+  xValor := "" 
+  xfator := ""
+
+  If SE2->E2_LD == "S"
+     xfator := AllTrim(SubStr(SE2->E2_cBarras,34,4))
+     xValor := StrZero(Val(SubStr(SE2->E2_cBarras,38,10)),10)
+     If Len(AllTrim(SubStr(SE2->E2_cBarras,38,10))) < 10
+        xfator := ""
+        xValor := StrZero(Val(SubStr(SE2->E2_cBarras,34,14)),15)
+     End
+  Else
+     xValor := StrZero(Val(SubStr(SE2->E2_cBarras,6,14)),15)
+  End
+
+Return(xFator+xValor)

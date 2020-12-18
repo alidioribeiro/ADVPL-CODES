@@ -1,0 +1,59 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+User Function Vdigito()        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("XFATOR,XN,XCODIGO,XTOT,XNUMERO,XNUM1")
+SetPrvt("XNUM2,XV,")
+
+// vDigito.Prx -> Calculo do Digito Verificador
+
+ xFator  := paramixb[1]
+ xN      := paramixb[2]
+ xCodigo := paramixb[3]
+ xTot    := 0
+
+ Do While xN <> 0
+    xNumero := SubStr(xCodigo,xN,1)
+    xNumero := Val(xNumero)
+    xNumero := xNumero * xFator
+
+    If xNumero >= 10
+       xNum1   := Int(xNumero / 10)
+       xNum2   := xNum1 * 10
+       xNumero := xNumero - xNum2 + 1
+    EndIf
+
+    xTot := xTot + xNumero
+    If xFator == 2
+       xFator := 1
+    Else
+       xFator := 2
+    EndIf
+
+    xN := xN - 1
+ EndDo
+
+ If xTot >= 100
+    xNum1 := Int(xTot / 100)
+    xNum2 := (xNum1 * 100 )
+    xTot  := (xTot - xNum2)
+ Else
+    xNum1 := Int(xTot / 10)
+    xNum2 := (xNum1 * 10 )
+    xTot  := (xTot - xNum2)
+ EndIf
+
+ If xTot <> 0
+    xTot := 10 - xTot
+ EndIf
+
+ xV := Str(xTot,1)
+// Substituido pelo assistente de conversao do AP5 IDE em 25/02/02 ==>  __Return(xV)
+Return(xV)        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02

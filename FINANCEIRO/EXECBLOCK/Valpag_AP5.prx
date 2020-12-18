@@ -1,0 +1,21 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+User Function Valpag()        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("VAL01,VAL02,XVALOR,")
+
+// VALPAG.PRX -> PREPARA VALOR DE PAGAMENTO PARA O SISPAG
+
+VAL01  := STR(SE2->E2_SALDO,13,2)
+VAL02  := STRTRAN(VAL01,".","")
+XVALOR := STRZERO(VAL(VAL02),15)
+// Substituido pelo assistente de conversao do AP5 IDE em 25/02/02 ==> __RETURN(XVALOR)
+Return(XVALOR)        // incluido pelo assistente de conversao do AP5 IDE em 25/02/02
+

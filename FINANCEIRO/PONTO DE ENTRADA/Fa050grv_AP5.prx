@@ -1,0 +1,93 @@
+#include "rwmake.ch" 
+
+User Function Fa050grv() 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CALIAS,CRECNO,XSERIE,XDOC,XVENCREA,XEMISSAO")
+SetPrvt("XVENCISS,XVENCIRF,XI,")
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ FA050GRV ³ Autor ³ Jorge Silveira        ³ Data ³ 01.11.00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gerar datas de vencimentos do titulos do ISS e IRRF        ³±±
+±±³          ³ conforme data de Emissao da Nota Fiscal de Entrada.        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ rdmake FA050GRV -x                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ NIPPON SEIKI DO BRASIL LTDA.                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cAlias := Alias()
+cRecno := Recno()
+
+xSerie   := SE2->E2_PREFIXO
+xDoc     := SE2->E2_NUM
+xVencRea := SE2->E2_VENCREA
+xEmissao := SE2->E2_EMISSAO
+
+xVencIss := ctod("  /  /  ")
+xVencIrf := ctod("  /  /  ")
+
+dbSelectArea("SE2")
+dbSetOrder(1)
+dbSeek(xFilial("SE2")+xSerie+xDoc)
+
+While !Eof() .And. xSerie+xDoc == SE2->E2_PREFIXO+SE2->E2_NUM
+
+      If xEmissao # SE2->E2_EMISSAO
+         dbSkip()
+         Loop
+      End
+
+      If Day(xEmissao) <= 15
+         xVencIss := ctod("20/"+StrZero(month(xEmissao),2)+"/"+right(dtoc(xEmissao),2))
+      Else
+         If month(xEmissao) # 12
+            xVencIss := ctod("05/"+StrZero(month(xEmissao)+1,2)+"/"+right(dtoc(xEmissao),2))
+         Else
+            xVencIss := ctod("05/"+"01/"+ right(str(Year(xEmissao)+1),2) )
+         EndIf
+      End
+
+      IF AllTrim(E2_Naturez) == "ISS"
+         RecLock("SE2",.F.)
+         SE2->E2_VENCTO  := xVencIss
+         SE2->E2_VENCREA := xVencIss
+         SE2->(MsUnlock())
+      END
+
+      xVencIrf := xEmissao
+      For xI := Dow(xEmissao) To 10
+          xVencIrf := xVencIrf + 1
+      Next
+
+      IF AllTrim(E2_Naturez) == "IRF"
+         RecLock("SE2",.F.)
+         SE2->E2_VENCTO  := xVencIrf
+         SE2->E2_VENCREA := xVencIrf
+         SE2->(MsUnlock())
+      ENDIF
+
+      dbSkip()
+
+EndDo
+
+dbSelectArea(cAlias)
+dbGoTo(cRecno)
+
+Return() 
